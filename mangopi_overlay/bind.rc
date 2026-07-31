@@ -1,0 +1,11 @@
+#!/bin/rc
+
+# This script can be used for a temporary "soft install"
+# to try building the sun20i (Nezsha / Mango Pi) kernel.
+# Or more simply, just unpack this tree into the root fs.
+
+# Before building it requires to have the RiscV compiler installed!
+# Currently tested with https://github.com/Nailim/9front-riscv-overlay
+
+bind -a  sys/src/9 /sys/src/9
+
