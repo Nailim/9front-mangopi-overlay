@@ -1,0 +1,22 @@
+objtype=riscv64
+
+</$objtype/mkfile
+
+KTZERO=0x41000000	# must match mem.h
+
+all:V: 9sun20i
+
+9sun20i: l.$O main.$O wdt.$O
+	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -o 9sun20i l.$O main.$O wdt.$O
+
+main.$O: main.c wdt.h dat.h
+	$CC $CFLAGS main.c
+
+wdt.$O: wdt.c wdt.h
+	$CC $CFLAGS wdt.c
+
+l.$O: l.s mem.h
+	$AS l.s
+
+clean:V:
+	rm -f 9sun20i main.$O wdt.$O l.$O
