@@ -36,12 +36,12 @@ TEXT setstvec(SB), $0
     MOVW R8, CSR(CSR_STVEC)
     RET
 
-TEXT trapvec(SB), $0
-    ADD $-UREGSIZE, R2		// R2 = new Ureg frame base; old sp = R2+UREGSIZE (not yet saved anywhere)
+TEXT trapvec(SB), $-8   // negative frame = no auto RA-save prologue (any call inside would trigger one otherwise)
+    ADD $-UREGSIZE, R2	// R2 = new Ureg frame base; old sp = R2+UREGSIZE (not yet saved anywhere)
 
     MOV R1, 8(R2)		// save true r1 first - it's about to become scratch
     MOV R2, R1
-    ADD $UREGSIZE, R1		// R1 = old sp
+    ADD $UREGSIZE, R1	// R1 = old sp
     MOV R1, 16(R2)		// ureg->sp
 
     MOV R3, 24(R2)
@@ -93,7 +93,9 @@ TEXT trapvec(SB), $0
     MOV R1, 288(R2)		// ureg->curmode - debugger-only field (libmach j.c), no hardware source
 
     MOV R2, R8			// arg0 = ureg
+    ADD $-16, R2		// leave a shadow-slot gap below ureg for trap()'s own prologue to write into
     JAL R1, trap(SB)
+    ADD $16, R2			// undo - R2 is back at the ureg frame base for the restore sequence below
 
     MOV 0(R2), R1
     MOVW R1, CSR(CSR_SEPC)	// sepc = ureg->pc, in case trap() advanced it
@@ -139,6 +141,69 @@ TEXT trapself(SB), $0
     SYS $0x001		// EBREAK
     RET
 
+// Here for testing purpuses
+TEXT resumetest(SB), $0
+    MOVW $-5, R5
+    MOVW $-6, R6
+    MOVW $-7, R7
+    MOVW $-8, R8
+    MOVW $-9, R9
+    MOVW $-10, R10
+    MOVW $-11, R11
+    MOVW $-12, R12
+    MOVW $-13, R13
+    MOVW $-14, R14
+    MOVW $-15, R15
+    MOVW $-16, R16
+    MOVW $-17, R17
+    MOVW $-18, R18
+    MOVW $-19, R19
+    MOVW $-20, R20
+    MOVW $-21, R21
+    MOVW $-22, R22
+    MOVW $-23, R23
+    MOVW $-24, R24
+    MOVW $-25, R25
+    MOVW $-26, R26
+    MOVW $-27, R27
+    MOVW $-28, R28
+    MOVW $-29, R29
+    MOVW $-30, R30
+    MOVW $-31, R31
+
+    SYS $0x001		// EBREAK - trap() decodes, prints, and now returns
+
+    MOVW $resumebuf(SB), R4
+    MOV R5, 0(R4)
+    MOV R6, 8(R4)
+    MOV R7, 16(R4)
+    MOV R8, 24(R4)
+    MOV R9, 32(R4)
+    MOV R10, 40(R4)
+    MOV R11, 48(R4)
+    MOV R12, 56(R4)
+    MOV R13, 64(R4)
+    MOV R14, 72(R4)
+    MOV R15, 80(R4)
+    MOV R16, 88(R4)
+    MOV R17, 96(R4)
+    MOV R18, 104(R4)
+    MOV R19, 112(R4)
+    MOV R20, 120(R4)
+    MOV R21, 128(R4)
+    MOV R22, 136(R4)
+    MOV R23, 144(R4)
+    MOV R24, 152(R4)
+    MOV R25, 160(R4)
+    MOV R26, 168(R4)
+    MOV R27, 176(R4)
+    MOV R28, 184(R4)
+    MOV R29, 192(R4)
+    MOV R30, 200(R4)
+    MOV R31, 208(R4)
+
+    RET
+
 // PUT32/GET32/dummy: the proven MMIO/delay primitives
 // Revisit and test `volatile` pointer codegen later
 TEXT PUT32(SB), $0
@@ -156,3 +221,5 @@ TEXT dummy(SB), $0
 GLOBL stack(SB), $16384
 GLOBL mach0(SB), $MACHSIZE  // storage for the one Mach struct
 GLOBL m(SB), $8             // storage for the `m` pointer itself (8 bytes on riscv64)
+
+GLOBL resumebuf(SB), $216	// 27 * 8 bytes, R5..R31 - for testing purpuses

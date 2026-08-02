@@ -7,7 +7,11 @@ unsigned int GET32(unsigned int);
 void dummy(unsigned int);
 
 void trapinit(void);
-void trapself(void);    // for testing
+
+// for testing
+void trapself(void);
+void resumetest(void);
+extern uintptr resumebuf[27];
 
 
 // D1 SOC SPECIFIC: UART0_BASE/UART_THR/UART_LSR below
@@ -61,10 +65,28 @@ void main(void)
 
     trapinit();
 
-    uart_puts("triggering a deliberate trap...\n");
-	trapself();
+    //uart_puts("triggering a deliberate trap...\n");
+	//trapself();
 
-    // should not reach - trap is for ever - wait for watchdog to reset
+    uart_puts("resumetest: seeding registers, triggering ebreak...\n");
+    resumetest();
+    uart_puts("resumetest: resumed without crashing\n");
+
+    int failed = 0;
+    int i;
+    for(i = 0; i < 27; i++){
+        if(resumebuf[i] != (uintptr)-(i+5))
+            failed++;
+    }
+    uart_puts("resumetest: mismatches = ");
+    uart_puthex64(failed);
+    uart_puts("\n");
+    if(failed == 0)
+        uart_puts("resumetest: ALL REGISTERS OK\n");
+    else
+        uart_puts("resumetest: SOME REGISTERS CORRUPTED\n");
+
+    // should not reach if trapself() - trapself is for ever
 	wdt_riscv_feed();
 	while(1){
 		delay(20000000);

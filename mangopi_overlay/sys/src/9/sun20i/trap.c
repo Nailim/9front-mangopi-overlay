@@ -60,8 +60,14 @@ trap(Ureg *ureg)
 	uart_puts("  stval   = "); uart_puthex64(ureg->tval); uart_puts("\n");
 	uart_puts("  sstatus = "); uart_puthex64(ureg->status); uart_puts("\n");
 
-	uart_puts("trap: halting\n");
     // not ment to be usefull yet, just testing
+    if(cause == 3){
+		uart_puts("trap: returning\n");
+        ureg->pc += 4;  // skip past the ebreak - sepc points AT it, not after it
+		return;
+	}
+
+	uart_puts("trap: halting\n");
 	for(;;)
 		;
 }
