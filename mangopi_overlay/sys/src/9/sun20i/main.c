@@ -6,6 +6,9 @@ void PUT32(unsigned int, unsigned int);
 unsigned int GET32(unsigned int);
 void dummy(unsigned int);
 
+void trapinit(void);
+void trapself(void);    // for testing
+
 
 // D1 SOC SPECIFIC: UART0_BASE/UART_THR/UART_LSR below
 // to be replaced in a structured way later
@@ -56,6 +59,12 @@ void main(void)
 	uart_puthex64((unsigned long long)m->machno);
 	uart_puts("\n");
 
+    trapinit();
+
+    uart_puts("triggering a deliberate trap...\n");
+	trapself();
+
+    // should not reach - trap is for ever - wait for watchdog to reset
 	wdt_riscv_feed();
 	while(1){
 		delay(20000000);

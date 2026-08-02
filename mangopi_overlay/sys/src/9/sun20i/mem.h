@@ -1,5 +1,5 @@
 /*
- * Memory and machine-specific definitions.  Used in C and assembler.
+ * Memory and machine-specific definitions. Used in C and assembler.
  */
 
 #define MIN(a, b)	((a) < (b)? (a): (b))
