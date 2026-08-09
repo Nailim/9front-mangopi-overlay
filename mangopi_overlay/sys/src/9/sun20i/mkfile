@@ -6,20 +6,26 @@ KTZERO=0x41000000	# must match mem.h
 
 all:V: 9sun20i
 
-9sun20i: l.$O main.$O trap.$O wdt.$O
-	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -o 9sun20i l.$O main.$O trap.$O wdt.$O
+9sun20i: l.$O main.$O trap.$O wdt.$O timer.$O plic.$O
+	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -o 9sun20i l.$O main.$O trap.$O wdt.$O timer.$O plic.$O
 
 main.$O: main.c wdt.h dat.h
 	$CC $CFLAGS main.c
 
-trap.$O: trap.c dat.h mem.h
+trap.$O: trap.c dat.h mem.h timer.h plic.h
 	$CC $CFLAGS trap.c
 
 wdt.$O: wdt.c wdt.h
 	$CC $CFLAGS wdt.c
 
+timer.$O: timer.c timer.h plic.h
+	$CC $CFLAGS timer.c
+
+plic.$O: plic.c plic.h
+	$CC $CFLAGS plic.c
+
 l.$O: l.s mem.h
 	$AS l.s
 
 clean:V:
-	rm -f 9sun20i main.$O trap.$O wdt.$O l.$O
+	rm -f 9sun20i main.$O trap.$O wdt.$O timer.$O plic.$O l.$O

@@ -23,3 +23,10 @@
 #define KZERO 0x41000000
 #define KTZERO KZERO
 #define MACHSIZE 8192
+
+/*
+ * Set by SBI, make it work now, scale later
+ */
+#define TIMEBASEFREQ	24000000
+#define TIMERHZ		1
+#define TICKINTERVAL	(TIMEBASEFREQ/TIMERHZ)

@@ -9,6 +9,15 @@
 #define CSR_SCAUSE  0x142
 #define CSR_STVAL   0x143
 
+
+#define CSR_TIME 0xC01
+
+
+#define SIE_STIE     0x20	// sie bit 5 - supervisor timer interrupt enable
+#define SIE_SEIE     0x200  // sie bit 9 - external PLIC interrupt enable
+#define SSTATUS_SIE  0x2	// sstatus bit 1 - global S-mode interrupt enable
+
+
 TEXT _start(SB), $0
     MOVW $setSB(SB), R3
 
@@ -136,6 +145,24 @@ TEXT trapvec(SB), $-8   // negative frame = no auto RA-save prologue (any call i
     SYS $0x102			// SRET
 
 
+TEXT rdtime(SB), $0
+    MOVW CSR(CSR_TIME), R8
+    RET
+
+
+TEXT intrenable(SB), $0
+    MOVW CSR(CSR_SIE), R8
+    MOVW $SIE_SEIE, R9
+    OR R9, R8
+    MOVW R8, CSR(CSR_SIE)
+
+    MOVW CSR(CSR_SSTATUS), R8
+    MOVW $SSTATUS_SIE, R9
+    OR R9, R8
+    MOVW R8, CSR(CSR_SSTATUS)
+    RET
+
+
 // Here for testing purpuses
 TEXT trapself(SB), $0
     SYS $0x001		// EBREAK
@@ -203,6 +230,7 @@ TEXT resumetest(SB), $0
     MOV R31, 208(R4)
 
     RET
+
 
 // PUT32/GET32/dummy: the proven MMIO/delay primitives
 // Revisit and test `volatile` pointer codegen later

@@ -23,8 +23,7 @@ extern uintptr resumebuf[27];
 
 void uart_putc(int c)
 {
-	while(!(GET32(UART_LSR) & UART_LSR_THRE))
-		;
+	while(!(GET32(UART_LSR) & UART_LSR_THRE));
 	PUT32(UART_THR, c & 0xFF);
 }
 
@@ -65,32 +64,9 @@ void main(void)
 
     trapinit();
 
-    //uart_puts("triggering a deliberate trap...\n");
-	//trapself();
-
-    uart_puts("resumetest: seeding registers, triggering ebreak...\n");
-    resumetest();
-    uart_puts("resumetest: resumed without crashing\n");
-
-    int failed = 0;
-    int i;
-    for(i = 0; i < 27; i++){
-        if(resumebuf[i] != (uintptr)-(i+5))
-            failed++;
-    }
-    uart_puts("resumetest: mismatches = ");
-    uart_puthex64(failed);
-    uart_puts("\n");
-    if(failed == 0)
-        uart_puts("resumetest: ALL REGISTERS OK\n");
-    else
-        uart_puts("resumetest: SOME REGISTERS CORRUPTED\n");
-
-    // should not reach if trapself() - trapself is for ever
 	wdt_riscv_feed();
 	while(1){
 		delay(20000000);
-		uart_puts("tick\n");
 		wdt_riscv_feed();
 	}
 }
