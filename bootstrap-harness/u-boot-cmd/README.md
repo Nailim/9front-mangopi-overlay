@@ -2,6 +2,8 @@
 
 U-Boot requires a boot script on the first partition with instructions what/where to load and execution.
 
+	/boot/boot.scr
+
 Script is written in text, e.g. _boot.cmd_, but needs to be in u-boot script format, e.g. _boot.scr_.
 
 Script is generated with mkimage tool provided by U-Boot. Check README.md in u-boot-bin for more infor on building that.
