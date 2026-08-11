@@ -7,6 +7,7 @@ unsigned int GET32(unsigned int);
 void dummy(unsigned int);
 
 void trapinit(void);
+void mmuinit(void);
 
 // for testing
 void trapself(void);
@@ -63,6 +64,9 @@ void main(void)
 	uart_puts("\n");
 
     trapinit();
+
+    mmuinit();
+	uart_puts("mmu: sv39 identity map enabled\n");
 
 	wdt_riscv_feed();
 	while(1){

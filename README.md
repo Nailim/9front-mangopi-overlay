@@ -4,7 +4,7 @@ An attempt to port 9front to RiscV [MangoPi](https://mangopi.org/mqpro) (Allwinn
 
 ## about
 
-About phase 3 of 9 done.
+About half of phase 4 of 9 done.
 
 A practical learning project atempting to pring 9front to MangoPi SBC. This is standing on the complimentari project trying to port [riscv compiler to 9front](https://github.com/Nailim/9front-riscv-overlay).
 
@@ -12,9 +12,9 @@ Practicality is questionable, usefulness is peronal, but the reference is real.
 
 To keep things managable a few phases are planned:
 
-~~* phase 1: kernel skeleton - boot, reach main() and print on something on uart~~
-~~* phase 2: traps - trigger/crash -> capture -> print~~
-~~* phase 3: timers and interrupts - print periodically, print to UART with interrupts~~
+* phase 1: ~~kernel skeleton - boot, reach main() and print on something on uart~~
+* phase 2: ~~traps - trigger/crash -> capture -> print~~
+* phase 3: ~~timers and interrupts - print periodically, print to UART with interrupts~~
 * phase 4: MMU - tables, virtual addresses, relocations, ...
 * phase 5: scheduler - switch "processes" or print from different threads
 * phase 6: console driver - issue commands to kernel

@@ -18,6 +18,9 @@
 #define SSTATUS_SIE  0x2	// sstatus bit 1 - global S-mode interrupt enable
 
 
+#define CSR_SATP 0x180
+
+
 TEXT _start(SB), $0
     MOVW $setSB(SB), R3
 
@@ -163,6 +166,33 @@ TEXT intrenable(SB), $0
     RET
 
 
+TEXT satpset(SB), $0
+    MOVW R8, CSR(CSR_SATP)
+    RET
+
+#define GPIO_PD_DATA 0x020000A0
+#define LED_BIT (1<<18)
+TEXT satptest(SB), $0
+    MOVW R8, CSR(CSR_SATP)
+
+    MOVW $GPIO_PD_DATA, R9
+blink:
+    MOVW 0(R9), R10
+    XOR $LED_BIT, R10
+    MOVW R10, 0(R9)
+
+    MOVW $3000000, R11
+delay:
+    ADD $-1, R11
+    BNE R11, R0, delay
+
+    JMP blink
+
+TEXT sfencevma(SB), $0
+    SFENCEVMA
+    RET
+
+
 // Here for testing purpuses
 TEXT trapself(SB), $0
     SYS $0x001		// EBREAK
@@ -229,6 +259,14 @@ TEXT resumetest(SB), $0
     MOV R30, 200(R4)
     MOV R31, 208(R4)
 
+    RET
+
+
+TEXT intrdisable(SB), $0
+    MOVW CSR(CSR_SSTATUS), R8
+    MOVW $-3, R9		// ~SSTATUS_SIE - same trick as $-1 elsewhere, two's-complement
+    AND R9, R8
+    MOVW R8, CSR(CSR_SSTATUS)
     RET
 
 
