@@ -1,6 +1,7 @@
 #include "u.h"
-#include "timer.h"
+#include "mem.h"
 #include "plic.h"
+#include "timer.h"
 
 /*
  * Allwinner SOC SPECIFIC 
@@ -37,7 +38,7 @@ struct Timerregs
 void
 timer0init(ulong ticks)
 {
-	Timerregs *tr = (Timerregs*)TimerBase;
+	Timerregs *tr = (Timerregs*)KADDR(TimerBase);
 
 	tr->intv0 = ticks;
 	tr->ctl0 = ModeContinuous|Div1|SrcHosc|Reload|Enable;
@@ -49,7 +50,7 @@ timer0init(ulong ticks)
 void
 timer0ack(void)
 {
-	Timerregs *tr = (Timerregs*)TimerBase;
+	Timerregs *tr = (Timerregs*)KADDR(TimerBase);
     ulong sta;
 
 	tr->irqsta = Timer0Irq;

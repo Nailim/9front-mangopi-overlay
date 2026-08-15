@@ -1,15 +1,11 @@
 #include "u.h"
+#include "mem.h"
 #include "plic.h"
 
 /*
- * D1 SOC SPECIFIC - interrupt-controller@10000000 in sun20i-d1.dtsi,
- * "allwinner,sun20i-d1-plic"/"thead,c900-plic" compatible - claims
- * RISC-V PLIC spec compliance, so the standard memory map applies.
- * riscv,ndev=176 real interrupt sources. Context ordering confirmed
- * from the dtsi's own interrupts-extended = <&cpu0_intc 11>, <&cpu0_intc
- * 9> (parent IRQ 11 = M-mode external, 9 = S-mode external), not
- * assumed: context 0 = hart0 M-mode, context 1 = hart0 S-mode - this
- * port only ever uses context 1.
+ * D1 SOC SPECIFIC - RISC-V PLIC spec compliance.
+ * Note: context 0 = hart0 M-mode, context 1 = hart0 S-mode
+ * - this port only ever uses context 1.
  */
 enum {
 	PlicBase	= 0x10000000,
@@ -35,7 +31,7 @@ struct Plicctl
 void
 plicinit(void)
 {
-	Plicctl *ctl = (Plicctl*)CtlBase;
+	Plicctl *ctl = (Plicctl*)KADDR(CtlBase);
 
 	ctl->threshold = 0;	/* accept any nonzero-priority IRQ */
 }
@@ -43,19 +39,19 @@ plicinit(void)
 void
 plicenable(int irq, int priority)
 {
-	Plicpriority *pri = (Plicpriority*)PlicBase;
+	Plicpriority *pri = (Plicpriority*)KADDR(PlicBase);
 	ulong *en;
 
 	pri->pri[irq] = priority;
 
-	en = (ulong*)EnableBase;
+	en = (ulong*)KADDR(EnableBase);
 	en[irq/32] |= 1 << (irq%32);
 }
 
 int
 plicclaim(void)
 {
-	Plicctl *ctl = (Plicctl*)CtlBase;
+	Plicctl *ctl = (Plicctl*)KADDR(CtlBase);
 
 	return ctl->claim;
 }
@@ -63,7 +59,7 @@ plicclaim(void)
 void
 pliccomplete(int irq)
 {
-	Plicctl *ctl = (Plicctl*)CtlBase;
+	Plicctl *ctl = (Plicctl*)KADDR(CtlBase);
 
 	ctl->claim = irq;
 }

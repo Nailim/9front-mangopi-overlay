@@ -20,8 +20,23 @@
 #define MAXMACH 1
 #define KSTACK 4096
 
-#define KZERO 0x41000000
-#define KTZERO KZERO
+/*
+ * Physical layout
+ */
+#define	PHYSDRAM	0x40000000		/* DRAM base */
+#define	PHYSTEXT	0x41000000		/* where u-boot loads the kernel */
+
+/*
+ * Virtual layout
+ */
+#define	KZERO		(0xFFFFFFFF80000000ULL)	/* PA 0x00000000 */
+#define	VDRAM		(KZERO + PHYSDRAM)	/* 0xFFFFFFFFC0000000 */
+#define	KTZERO		(KZERO + PHYSTEXT)	/* 0xFFFFFFFFC1000000 - must match mkfile */
+
+#define	KADDR(pa)	((void*)((uintptr)(pa) + KZERO))
+#define	PADDR(va)	((uintptr)(va) - KZERO)
+
+
 #define MACHSIZE 8192
 
 /*

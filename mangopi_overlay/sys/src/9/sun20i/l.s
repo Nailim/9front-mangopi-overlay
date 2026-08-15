@@ -22,7 +22,7 @@
 
 
 TEXT _start(SB), $0
-    MOVW $setSB(SB), R3
+    MOVW $setSB(SB), R3		// PC-relative -> PA while running physically
 
     // BSS isn't zeroed by anything in the u-boot fatload/go boot path
     MOVW $edata(SB), R9
@@ -34,14 +34,33 @@ zerobss:
     JMP zerobss
 zerodone:
 
-    MOVW $stack+16384(SB), R2
+    MOVW $stack+16368(SB), R2	// 16 below the top: leaves the argument shadow
+				                // slot a called C function may write to
 
-    MOVW $mach0(SB), R9 // address of the Mach struct storage
-    MOVW $m(SB), R8     // address of the `m` pointer variable itself
-    MOV R9, 0(R8)       // m = &mach0
+    JAL R1, mmubootstrap(SB)	// R8 = satp value; tables built with PAs
+    MOVW R8, CSR(CSR_SATP)
+    SFENCEVMA
+    // identity and high mappings both live now; PC is still physical
 
-    MOVW $main(SB), R10	// load address of main into R10.
-    JMP (R10)			// plain jump into main
+    JAL R1, mmuhighentry(SB)	// R8 = VA of highstart
+    JMP (R8)
+
+
+// Everything from here on executes at a high VA, so PC-relative symbol
+// references yield VAs and the physical aliases are no longer needed.
+TEXT highstart(SB), $-8
+    MOVW $setSB(SB), R3		// now resolves high
+    MOVW $stack+16368(SB), R2	// high stack
+
+    MOVW $mach0(SB), R9
+    MOVW $m(SB), R8
+    MOV R9, 0(R8)		// m = &mach0, both VAs
+
+    JAL R1, uarthigh(SB)	// console -> high VA before the identity map goes
+    JAL R1, mmulowdrop(SB)	// retire the identity mapping
+
+    MOVW $main(SB), R10
+    JMP (R10)
 
 
 TEXT setstvec(SB), $0
@@ -166,28 +185,6 @@ TEXT intrenable(SB), $0
     RET
 
 
-TEXT satpset(SB), $0
-    MOVW R8, CSR(CSR_SATP)
-    RET
-
-#define GPIO_PD_DATA 0x020000A0
-#define LED_BIT (1<<18)
-TEXT satptest(SB), $0
-    MOVW R8, CSR(CSR_SATP)
-
-    MOVW $GPIO_PD_DATA, R9
-blink:
-    MOVW 0(R9), R10
-    XOR $LED_BIT, R10
-    MOVW R10, 0(R9)
-
-    MOVW $3000000, R11
-delay:
-    ADD $-1, R11
-    BNE R11, R0, delay
-
-    JMP blink
-
 TEXT sfencevma(SB), $0
     SFENCEVMA
     RET
@@ -270,16 +267,6 @@ TEXT intrdisable(SB), $0
     RET
 
 
-// PUT32/GET32/dummy: the proven MMIO/delay primitives
-// Revisit and test `volatile` pointer codegen later
-TEXT PUT32(SB), $0
-    MOVW val+4(FP), R11	// second argument (value) - passed on the stack
-    MOVW R11, 0(R8)		// first argument (address) - passed in R8
-    RET
-TEXT GET32(SB), $0
-    MOVW 0(R8), R8		// first (and only) argument - passed in R8,
-				        // result returned in the same register
-    RET
 TEXT dummy(SB), $0
     RET                 // empty function - cheap busy-wait
 

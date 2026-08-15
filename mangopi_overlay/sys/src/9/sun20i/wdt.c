@@ -1,7 +1,8 @@
+#include "u.h"
+#include "mem.h"
 #include "wdt.h"
 
-void PUT32 ( unsigned int, unsigned int );
-unsigned int GET32 ( unsigned int );
+
 
 /*
  * D1 SOC SPECIFIC - register offsets, the key value, the timeout
@@ -29,9 +30,9 @@ unsigned int GET32 ( unsigned int );
 #define RISCV_WDT_BASE 0x06011000
 
 #define WDT_KEY 0x16aa0000
-#define WDT_CTRL_OFFSET 0x10
-#define WDT_CFG_OFFSET  0x14
-#define WDT_MODE_OFFSET 0x18
+// #define WDT_CTRL_OFFSET 0x10
+// #define WDT_CFG_OFFSET  0x14
+// #define WDT_MODE_OFFSET 0x18
 
 #define WDT_CTRL_RELOAD ((1 << 0) | (0x0a57 << 1)) /* kick/reload */
 #define WDT_MODE_EN (1 << 0)
@@ -40,6 +41,18 @@ unsigned int GET32 ( unsigned int );
 #define WDT_TIMEOUT_SHIFT 4
 #define WDT_TIMEOUT_MASK  0xf
 #define WDT_MAX_TIMEOUT 16 /* seconds */
+
+typedef struct Wdtregs Wdtregs;
+struct Wdtregs
+{
+	uchar	pad[0x10];
+	ulong	ctrl;		/* +0x10 */
+	ulong	cfg;		/* +0x14 */
+	ulong	mode;		/* +0x18 */
+};
+
+#define MAINWDT		((Wdtregs*)KADDR(MAIN_WDT_BASE))
+#define RISCVWDT	((Wdtregs*)KADDR(RISCV_WDT_BASE))
 
 /* seconds -> register value, same table as wdt_timeout_map in
  * drivers/watchdog/sunxi_wdt.c, indices 0..16 in order. Written as a
@@ -50,67 +63,72 @@ static unsigned char wdt_timeout_map[1 + WDT_MAX_TIMEOUT] = {
 	0x8, 0x9, 0x9, 0xa, 0xa, 0xb, 0xb,
 };
 
-static void wdt_feed_at(unsigned int base)
+static void
+wdt_feed_at(Wdtregs *w)
 {
-	PUT32(base + WDT_CTRL_OFFSET, WDT_CTRL_RELOAD);
+	w->ctrl = WDT_CTRL_RELOAD;
 }
 
-static void wdt_disable_at(unsigned int base)
+static void
+wdt_disable_at(Wdtregs *w)
 {
-	PUT32(base + WDT_MODE_OFFSET, WDT_KEY);
+	w->mode = WDT_KEY;
 }
 
-static void wdt_enable_at(unsigned int base, unsigned int timeout_seconds)
+static void
+wdt_enable_at(Wdtregs *w, unsigned int timeout_seconds)
 {
-	unsigned int val;
+	ulong val;
 
 	if(timeout_seconds > WDT_MAX_TIMEOUT)
 		timeout_seconds = WDT_MAX_TIMEOUT;
 
-	/* enable system reset on expiry */
-	val = GET32(base + WDT_CFG_OFFSET);
+	val = w->cfg;
 	val &= ~WDT_RESET_MASK;
-	val |= WDT_RESET_VAL;
-	val |= WDT_KEY;
-	PUT32(base + WDT_CFG_OFFSET, val);
+	val |= WDT_RESET_VAL | WDT_KEY;
+	w->cfg = val;
 
-	/* set timeout and enable */
-	val = GET32(base + WDT_MODE_OFFSET);
+	val = w->mode;
 	val &= ~(WDT_TIMEOUT_MASK << WDT_TIMEOUT_SHIFT);
 	val |= wdt_timeout_map[timeout_seconds] << WDT_TIMEOUT_SHIFT;
-	val |= WDT_MODE_EN;
-	val |= WDT_KEY;
-	PUT32(base + WDT_MODE_OFFSET, val);
+	val |= WDT_MODE_EN | WDT_KEY;
+	w->mode = val;
 
-	wdt_feed_at(base);
+	wdt_feed_at(w);
 }
 
-void wdt_main_enable(unsigned int timeout_seconds)
+void
+wdt_main_enable(unsigned int timeout_seconds)
 {
-	wdt_enable_at(MAIN_WDT_BASE, timeout_seconds);
+	wdt_enable_at(MAINWDT, timeout_seconds);
 }
 
-void wdt_main_disable(void)
+void
+wdt_main_disable(void)
 {
-	wdt_disable_at(MAIN_WDT_BASE);
+	wdt_disable_at(MAINWDT);
 }
 
-void wdt_main_feed(void)
+void
+wdt_main_feed(void)
 {
-	wdt_feed_at(MAIN_WDT_BASE);
+	wdt_feed_at(MAINWDT);
 }
 
-void wdt_riscv_enable(unsigned int timeout_seconds)
+void
+wdt_riscv_enable(unsigned int timeout_seconds)
 {
-	wdt_enable_at(RISCV_WDT_BASE, timeout_seconds);
+	wdt_enable_at(RISCVWDT, timeout_seconds);
 }
 
-void wdt_riscv_disable(void)
+void
+wdt_riscv_disable(void)
 {
-	wdt_disable_at(RISCV_WDT_BASE);
+	wdt_disable_at(RISCVWDT);
 }
 
-void wdt_riscv_feed(void)
+void
+wdt_riscv_feed(void)
 {
-	wdt_feed_at(RISCV_WDT_BASE);
+	 wdt_feed_at(RISCVWDT);
 }

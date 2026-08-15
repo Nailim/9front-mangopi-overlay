@@ -2,7 +2,7 @@ objtype=riscv64
 
 </$objtype/mkfile
 
-KTZERO=0x41000000	# must match mem.h
+KTZERO=0xFFFFFFFFC1000000	# must match mem.h
 
 all:V: 9sun20i
 

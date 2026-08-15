@@ -1,13 +1,12 @@
 #include "u.h"
+#include "mem.h"
 #include "dat.h"
 #include "wdt.h"
 
-void PUT32(unsigned int, unsigned int);
-unsigned int GET32(unsigned int);
 void dummy(unsigned int);
 
 void trapinit(void);
-void mmuinit(void);
+/* no mmuinit - the MMU switch now happens in l.s before main() */
 
 // for testing
 void trapself(void);
@@ -15,17 +14,22 @@ void resumetest(void);
 extern uintptr resumebuf[27];
 
 
-// D1 SOC SPECIFIC: UART0_BASE/UART_THR/UART_LSR below
-// to be replaced in a structured way later
-#define UART0_BASE 0x02500000
-#define UART_THR (UART0_BASE + (0 * 4))
-#define UART_LSR (UART0_BASE + (5 * 4))
-#define UART_LSR_THRE (1 << 5)
+#define UART0_PHYS	0x02500000
+#define UART_LSR_THRE	(1<<5)
 
-void uart_putc(int c)
+static volatile u32int *uart = (volatile u32int*)UART0_PHYS;
+
+void
+uarthigh(void)
 {
-	while(!(GET32(UART_LSR) & UART_LSR_THRE));
-	PUT32(UART_THR, c & 0xFF);
+	uart = (volatile u32int*)KADDR(UART0_PHYS);
+}
+
+void
+uart_putc(int c)
+{
+	while((uart[5] & UART_LSR_THRE) == 0);	/* LSR at +0x14 */
+	uart[0] = c & 0xFF;			            /* THR at +0x00 */
 }
 
 void uart_puts(char *s)
@@ -59,14 +63,16 @@ void delay(unsigned int count)
 void main(void)
 {
 	uart_puts("9sun20i: Plan9 riscv64 D1 kernel skeleton starting\n");
+
+	uart_puts("main at ");
+	uart_puthex64((unsigned long long)main);
+	uart_puts("\n");
+
 	uart_puts("m->machno = ");
 	uart_puthex64((unsigned long long)m->machno);
 	uart_puts("\n");
 
-    trapinit();
-
-    mmuinit();
-	uart_puts("mmu: sv39 identity map enabled\n");
+	trapinit();
 
 	wdt_riscv_feed();
 	while(1){
