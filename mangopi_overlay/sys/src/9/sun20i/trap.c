@@ -3,11 +3,11 @@
  */
 
 #include "u.h"
-#include "dat.h"
 #include "mem.h"
+#include "dat.h"
+#include "fns.h"
+#include "io.h"
 #include "ureg.h"
-#include "timer.h"
-#include "plic.h"
 
 // for now to get things together
 void uart_puts(char*);

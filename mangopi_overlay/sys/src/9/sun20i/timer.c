@@ -1,16 +1,16 @@
 #include "u.h"
 #include "mem.h"
-#include "plic.h"
-#include "timer.h"
+#include "dat.h"
+#include "fns.h"
+#include "io.h"
 
 /*
  * Allwinner SOC SPECIFIC 
  * timer0 only for now while testing 
  */
 
-enum {
-	TimerBase	= 0x02050000,
 
+enum {
 	ModeContinuous	= 0<<7,
 	Div1		= 0<<4,
 	SrcHosc		= 1<<2,	/* 24MHz - matches TIMEBASEFREQ */
@@ -38,7 +38,7 @@ struct Timerregs
 void
 timer0init(ulong ticks)
 {
-	Timerregs *tr = (Timerregs*)KADDR(TimerBase);
+	Timerregs *tr = (Timerregs*)KADDR(PHYSTIMER);
 
 	tr->intv0 = ticks;
 	tr->ctl0 = ModeContinuous|Div1|SrcHosc|Reload|Enable;
@@ -50,7 +50,7 @@ timer0init(ulong ticks)
 void
 timer0ack(void)
 {
-	Timerregs *tr = (Timerregs*)KADDR(TimerBase);
+	Timerregs *tr = (Timerregs*)KADDR(PHYSTIMER);
     ulong sta;
 
 	tr->irqsta = Timer0Irq;

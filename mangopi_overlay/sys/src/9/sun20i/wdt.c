@@ -1,6 +1,8 @@
 #include "u.h"
 #include "mem.h"
-#include "wdt.h"
+#include "dat.h"
+#include "fns.h"
+#include "io.h"
 
 
 
@@ -26,13 +28,8 @@
  *    status override, in the dtsi - this is the one that will bite you
  *    if you don't feed or disable it): 0x06011000
  */
-#define MAIN_WDT_BASE  0x020500a0
-#define RISCV_WDT_BASE 0x06011000
 
 #define WDT_KEY 0x16aa0000
-// #define WDT_CTRL_OFFSET 0x10
-// #define WDT_CFG_OFFSET  0x14
-// #define WDT_MODE_OFFSET 0x18
 
 #define WDT_CTRL_RELOAD ((1 << 0) | (0x0a57 << 1)) /* kick/reload */
 #define WDT_MODE_EN (1 << 0)
@@ -51,8 +48,8 @@ struct Wdtregs
 	ulong	mode;		/* +0x18 */
 };
 
-#define MAINWDT		((Wdtregs*)KADDR(MAIN_WDT_BASE))
-#define RISCVWDT	((Wdtregs*)KADDR(RISCV_WDT_BASE))
+#define MAINWDT		((Wdtregs*)KADDR(PHYSWDTMAIN))
+#define RISCVWDT	KADDR(PHYSWDTRISCV)
 
 /* seconds -> register value, same table as wdt_timeout_map in
  * drivers/watchdog/sunxi_wdt.c, indices 0..16 in order. Written as a

@@ -1,28 +1,23 @@
 #include "u.h"
 #include "mem.h"
 #include "dat.h"
-#include "wdt.h"
+#include "fns.h"
+#include "io.h"
 
 void dummy(unsigned int);
 
 void trapinit(void);
 /* no mmuinit - the MMU switch now happens in l.s before main() */
 
-// for testing
-void trapself(void);
-void resumetest(void);
-extern uintptr resumebuf[27];
 
-
-#define UART0_PHYS	0x02500000
 #define UART_LSR_THRE	(1<<5)
 
-static volatile u32int *uart = (volatile u32int*)UART0_PHYS;
+static volatile u32int *uart = (volatile u32int*)PHYSUART0;
 
 void
 uarthigh(void)
 {
-	uart = (volatile u32int*)KADDR(UART0_PHYS);
+	uart = (volatile u32int*)KADDR(PHYSUART0);
 }
 
 void

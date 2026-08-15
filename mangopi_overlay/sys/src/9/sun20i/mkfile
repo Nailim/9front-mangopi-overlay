@@ -2,29 +2,29 @@ objtype=riscv64
 
 </$objtype/mkfile
 
-KTZERO=0xFFFFFFFFC1000000	# must match mem.h
+KTZERO=0xFFFFFFFFC1000000
 
 all:V: 9sun20i
 
 9sun20i: l.$O main.$O trap.$O wdt.$O timer.$O plic.$O mmu.$O
 	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -o 9sun20i l.$O main.$O trap.$O wdt.$O timer.$O plic.$O mmu.$O
 
-main.$O: main.c wdt.h dat.h
+main.$O: main.c mem.h dat.h fns.h io.h
 	$CC $CFLAGS main.c
 
-trap.$O: trap.c dat.h mem.h timer.h plic.h
+trap.$O: trap.c mem.h dat.h fns.h io.h
 	$CC $CFLAGS trap.c
 
-wdt.$O: wdt.c wdt.h
+wdt.$O: wdt.c mem.h dat.h fns.h io.h
 	$CC $CFLAGS wdt.c
 
-timer.$O: timer.c timer.h plic.h
+timer.$O: timer.c mem.h dat.h fns.h io.h
 	$CC $CFLAGS timer.c
 
-plic.$O: plic.c plic.h
+plic.$O: plic.c mem.h dat.h fns.h io.h
 	$CC $CFLAGS plic.c
 
-mmu.$O: mmu.c mem.h
+mmu.$O: mmu.c mem.h dat.h fns.h io.h
 	$CC $CFLAGS mmu.c
 
 l.$O: l.s mem.h

@@ -1,19 +1,14 @@
 #include "u.h"
 #include "mem.h"
-#include "plic.h"
+#include "dat.h"
+#include "fns.h"
+#include "io.h"
 
 /*
  * D1 SOC SPECIFIC - RISC-V PLIC spec compliance.
  * Note: context 0 = hart0 M-mode, context 1 = hart0 S-mode
  * - this port only ever uses context 1.
  */
-enum {
-	PlicBase	= 0x10000000,
-	Context		= 1,	/* hart0 S-mode - the only context this port uses */
-
-	EnableBase	= PlicBase + 0x002000 + 0x80*Context,
-	CtlBase		= PlicBase + 0x200000 + 0x1000*Context,
-};
 
 typedef struct Plicpriority Plicpriority;
 struct Plicpriority
@@ -31,7 +26,7 @@ struct Plicctl
 void
 plicinit(void)
 {
-	Plicctl *ctl = (Plicctl*)KADDR(CtlBase);
+	Plicctl *ctl = (Plicctl*)KADDR(PHYSPLICCTL);
 
 	ctl->threshold = 0;	/* accept any nonzero-priority IRQ */
 }
@@ -39,19 +34,19 @@ plicinit(void)
 void
 plicenable(int irq, int priority)
 {
-	Plicpriority *pri = (Plicpriority*)KADDR(PlicBase);
+	Plicpriority *pri = (Plicpriority*)KADDR(PHYSPLIC);
 	ulong *en;
 
 	pri->pri[irq] = priority;
 
-	en = (ulong*)KADDR(EnableBase);
+	en = (ulong*)KADDR(PHYSPLICEN);
 	en[irq/32] |= 1 << (irq%32);
 }
 
 int
 plicclaim(void)
 {
-	Plicctl *ctl = (Plicctl*)KADDR(CtlBase);
+	Plicctl *ctl = (Plicctl*)KADDR(PHYSPLICCTL);
 
 	return ctl->claim;
 }
@@ -59,7 +54,7 @@ plicclaim(void)
 void
 pliccomplete(int irq)
 {
-	Plicctl *ctl = (Plicctl*)KADDR(CtlBase);
+	Plicctl *ctl = (Plicctl*)KADDR(PHYSPLICCTL);
 
 	ctl->claim = irq;
 }

@@ -48,7 +48,7 @@
 
 
 /*
- * Sv39 MMU (TODO while testing - KZERO stays == physical)
+ * Sv39 MMU
  */
 #define	PTSHIFT		(PGSHIFT-3)		/* log2(entries per page-table page): 9 */
 #define	PTLEVELS	3			    /* Sv39 is always exactly 3 levels */
