@@ -20,6 +20,18 @@
 #define CSR_SATP 0x180
 
 
+/*
+ * Defines from libc/riscv64/tas.s */
+#define AQ	(1<<26)
+#define RL	(1<<25)
+#define LRW(rs1, rd) \
+	WORD $((2<<27)|(0<<20)|((rs1)<<15)|(2<<12)|((rd)<<7)|057|AQ)
+#define SCW(rs2, rs1, rd) \
+	WORD $((3<<27)|((rs2)<<20)|((rs1)<<15)|(2<<12)|((rd)<<7)|057|AQ|RL)
+
+#define FENCE	WORD $(0xf | 0xff<<20)		/* fence iorw,iorw */
+
+
 TEXT _start(SB), $0
     MOVW $setSB(SB), R3		// PC-relative -> PA while running physically
 
@@ -35,6 +47,9 @@ zerodone:
 
     MOVW $stack+16368(SB), R2	// 16 below the top: leaves the argument shadow
 				                // slot a called C function may write to
+    
+    MOVW $mach0(SB), R7		// m (physical until the jump)
+    MOV R0, R6			    // up = nil
 
     JAL R1, mmubootstrap(SB)	// R8 = satp value; tables built with PAs
     MOVW R8, CSR(CSR_SATP)
@@ -48,12 +63,11 @@ zerodone:
 // Everything from here on executes at a high VA, so PC-relative symbol
 // references yield VAs and the physical aliases are no longer needed.
 TEXT highstart(SB), $-8
-    MOVW $setSB(SB), R3		// now resolves high
+    MOVW $setSB(SB), R3		    // now resolves high
     MOVW $stack+16368(SB), R2	// high stack
 
-    MOVW $mach0(SB), R9
-    MOVW $m(SB), R8
-    MOV R9, 0(R8)		// m = &mach0, both VAs
+    MOVW $mach0(SB), R7		// m = &mach0, pinned
+    MOV R0, R6			    // up = nil
 
     JAL R1, uarthigh(SB)	// console -> high VA before the identity map goes
     JAL R1, mmulowdrop(SB)	// retire the identity mapping
@@ -77,6 +91,7 @@ TEXT trapvec(SB), $-8   // negative frame = no auto RA-save prologue (any call i
     MOV R3, 24(R2)
     MOV R4, 32(R2)
     MOV R5, 40(R2)
+    // up/m: restoring these is only correct while traps come from kernel mode - later in implementation we must reload, not trust, them
     MOV R6, 48(R2)
     MOV R7, 56(R2)
     MOV R8, 64(R2)
@@ -189,10 +204,88 @@ TEXT sfencevma(SB), $0
     RET
 
 
+// Interrupt masking ...
+TEXT splhi(SB), $0
+    CSRRC CSR(CSR_SSTATUS), $SSTATUS_SIE, R8	// clear SIE, old sstatus -> R8
+    AND $SSTATUS_SIE, R8
+    RET
+
+TEXT spllo(SB), $0
+    CSRRS CSR(CSR_SSTATUS), $SSTATUS_SIE, R8	// set SIE, old sstatus -> R8
+    AND $SSTATUS_SIE, R8
+    RET
+
+TEXT splx(SB), $0
+    BEQ R8, splxoff
+    CSRRS CSR(CSR_SSTATUS), $SSTATUS_SIE, R8
+    RET
+splxoff:
+    CSRRC CSR(CSR_SSTATUS), $SSTATUS_SIE, R8
+    RET
+
+TEXT islo(SB), $0
+    MOVW CSR(CSR_SSTATUS), R8
+    AND $SSTATUS_SIE, R8
+    RET
+
+
+// Scheduler primitives ...
+TEXT setlabel(SB), $-8
+    MOV R2, 0(R8)	// Label.sp
+    MOV R1, 8(R8)	// Label.pc = our return address
+    MOV R0, R8		// return 0
+    RET
+
+TEXT gotolabel(SB), $-8
+    MOV 0(R8), R2	// restore sp
+    MOV 8(R8), R1	// restore pc
+    MOV $1, R8		// return 1 - reappears as setlabel's second return
+    RET
+
+// Atomics and barriers ...
+TEXT tas(SB), $0
+TEXT _tas(SB), $0
+    MOV R8, R12		// address of the key
+    MOV $1, R10
+    FENCE
+tas1:
+    LRW(12, 8)		// R8 = *R12 (old value, returned)
+    SCW(10, 12, 14)	// *R12 = 1 if reservation held; R14 = 0 on success
+    BNE R14, tas1
+    RET
+
+TEXT cmpswap(SB), $0
+    MOV R8, R12		// addr
+    MOVW old+8(FP), R13	// long is 32-bit, slots are 8 bytes apart
+    MOVW new+12(FP), R14
+    FENCE
+cas1:
+    LRW(12, 15)
+    BNE R15, R13, cas0	// mismatch: no reservation to clear, RISC-V has no CLREX
+    SCW(14, 12, 16)
+    BNE R16, cas1	// lost the reservation, retry
+    MOV $1, R8
+    RET
+cas0:
+    MOV R0, R8
+    RET
+
+TEXT coherence(SB), $0
+    FENCE
+    RET
+
+TEXT idlehands(SB), $0
+    SYS $0x105		// WFI
+    RET
+
+TEXT getcallerpc(SB), $0
+    MOV 0(R2), R8	// caller's saved LINK at 0(SP)
+    RET
+
+
 TEXT dummy(SB), $0
     RET                 // empty function - cheap busy-wait
 
 
 GLOBL stack(SB), $16384
 GLOBL mach0(SB), $MACHSIZE  // storage for the one Mach struct
-GLOBL m(SB), $8             // storage for the `m` pointer itself (8 bytes on riscv64)

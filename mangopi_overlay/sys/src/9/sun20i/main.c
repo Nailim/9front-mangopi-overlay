@@ -69,6 +69,28 @@ void main(void)
 
 	trapinit();
 
+    // testing 
+    Label l;
+	long v;
+	int n;
+
+	n = setlabel(&l);
+	uart_puts("setlabel returned ");
+	uart_puthex64(n);
+	uart_puts("\n");
+	if(n == 0)
+		gotolabel(&l);		/* should reappear above with n == 1 */
+
+	v = 0;
+	uart_puts("tas first  = "); uart_puthex64(tas(&v)); uart_puts("\n");	/* 0 */
+	uart_puts("tas second = "); uart_puthex64(tas(&v)); uart_puts("\n");	/* 1 */
+
+	v = 5;
+	uart_puts("cas match  = "); uart_puthex64(cmpswap(&v, 5, 9)); uart_puts("\n");	/* 1, v=9 */
+	uart_puts("cas miss   = "); uart_puthex64(cmpswap(&v, 5, 7)); uart_puts("\n");	/* 0, v=9 */
+	uart_puts("v = "); uart_puthex64(v); uart_puts("\n");				/* 9 */
+    
+
 	wdt_riscv_feed();
 	while(1){
 		delay(20000000);

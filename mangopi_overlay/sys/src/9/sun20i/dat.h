@@ -1,7 +1,9 @@
-typedef struct Mach	Mach;
+typedef struct Mach     Mach;
 typedef struct Label	Label;
-typedef struct Ureg	Ureg;
+typedef struct Proc     Proc;
+typedef struct Ureg     Ureg;
 
+#pragma incomplete Proc		/* defined by ../port/portdat.h - to be included later */
 #pragma incomplete Ureg
 
 struct Mach
@@ -9,10 +11,12 @@ struct Mach
 	int	machno;		/* physical id of processor */
 };
 
-extern Mach* m;     /* just point to the single core */
-
 struct Label
 {
 	uintptr	sp;
 	uintptr	pc;
 };
+
+extern register Mach* m;	/* R7 */
+extern register Proc* up;	/* R6 */
+
