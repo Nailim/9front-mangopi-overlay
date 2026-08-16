@@ -1,34 +1,61 @@
+CONF=sun20i
+CONFLIST=sun20i
+
+KTZERO=0xFFFFFFFFC1000000	# KZERO+PHYSTEXT, must match mem.h
+
 objtype=riscv64
-
 </$objtype/mkfile
+p=9
 
-KTZERO=0xFFFFFFFFC1000000
+DEVS=`{rc ../port/mkdevlist $CONF}
 
-all:V: 9sun20i
+PORT=\
+	alarm.$O\
+	alloc.$O\
+	allocb.$O\
+	auth.$O\
+	cache.$O\
+	chan.$O\
+	dev.$O\
+	edf.$O\
+	fault.$O\
+	mul64fract.$O\
+	page.$O\
+	parse.$O\
+	pgrp.$O\
+	portclock.$O\
+	print.$O\
+	proc.$O\
+	qio.$O\
+	qlock.$O\
+	segment.$O\
+	sysfile.$O\
+	sysproc.$O\
+	taslock.$O\
+	tod.$O\
+	xalloc.$O\
+	random.$O\
+	rdb.$O\
+	syscallfmt.$O\
 
-9sun20i: l.$O main.$O trap.$O wdt.$O timer.$O plic.$O mmu.$O
-	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -o 9sun20i l.$O main.$O trap.$O wdt.$O timer.$O plic.$O mmu.$O
+OBJ=\
+	l.$O\
+	main.$O\
+	mmu.$O\
+	trap.$O\
+	timer.$O\
+	plic.$O\
+	wdt.$O\
+	stub.$O\
+	$DEVS\
+	$PORT\
 
-main.$O: main.c mem.h dat.h fns.h io.h
-	$CC $CFLAGS main.c
+LIB=\
+	/$objtype/lib/libsec.a\
+	/$objtype/lib/libmp.a\
+	/$objtype/lib/libc.a\
 
-trap.$O: trap.c mem.h dat.h fns.h io.h
-	$CC $CFLAGS trap.c
+$p$CONF:D:	$OBJ $CONF.$O $LIB
+	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -l -o $target $prereq
 
-wdt.$O: wdt.c mem.h dat.h fns.h io.h
-	$CC $CFLAGS wdt.c
-
-timer.$O: timer.c mem.h dat.h fns.h io.h
-	$CC $CFLAGS timer.c
-
-plic.$O: plic.c mem.h dat.h fns.h io.h
-	$CC $CFLAGS plic.c
-
-mmu.$O: mmu.c mem.h dat.h fns.h io.h
-	$CC $CFLAGS mmu.c
-
-l.$O: l.s mem.h
-	$AS l.s
-
-clean:V:
-	rm -f 9sun20i main.$O trap.$O wdt.$O timer.$O plic.$O mmu.$O l.$O
+<../port/portmkfile

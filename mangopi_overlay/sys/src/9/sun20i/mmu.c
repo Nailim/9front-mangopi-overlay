@@ -1,4 +1,5 @@
 #include "u.h"
+#include "../port/lib.h"
 #include "mem.h"
 #include "dat.h"
 #include "fns.h"
@@ -49,12 +50,12 @@ mapleaf(uintptr va, uintptr pa, uintptr attr)
 	x2 = PTLX(va, 2);
 	if(!(root[x2] & PTEVALID))
 		root[x2] = PAPTE((uintptr)newtable()) | PTEPTR;
-	l1 = (uintptr*)PPN(root[x2]);
+	l1 = (uintptr*)PTEPA(root[x2]);
 
 	x1 = PTLX(va, 1);
 	if(!(l1[x1] & PTEVALID))
 		l1[x1] = PAPTE((uintptr)newtable()) | PTEPTR;
-	l0 = (uintptr*)PPN(l1[x1]);
+	l0 = (uintptr*)PTEPA(l1[x1]);
 
 	x0 = PTLX(va, 0);
 	l0[x0] = PAPTE(pa) | attr;

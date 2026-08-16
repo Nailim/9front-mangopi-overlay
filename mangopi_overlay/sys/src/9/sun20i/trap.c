@@ -3,6 +3,7 @@
  */
 
 #include "u.h"
+#include "../port/lib.h"
 #include "mem.h"
 #include "dat.h"
 #include "fns.h"
@@ -33,7 +34,7 @@ trapinit(void)
 int ticks;
 
 static void
-timerintr(void)
+clockintr(void)		/* was timerintr */
 {
 	ticks++;
 	uart_puts("timer tick ");
@@ -52,7 +53,7 @@ plicintr(void)
 
 	switch(irq){
 	case TIMER0IRQ:
-		timerintr();
+		clockintr();
 		break;
 	default:
 		uart_puts("trap: unhandled PLIC irq ");

@@ -1,4 +1,5 @@
 #include "u.h"
+#include "../port/lib.h"
 #include "mem.h"
 #include "dat.h"
 #include "fns.h"
@@ -8,6 +9,13 @@ void dummy(unsigned int);
 
 void trapinit(void);
 /* no mmuinit - the MMU switch now happens in l.s before main() */
+
+
+
+// Defines to get port included and compiled
+Conf	conf;
+Image*	swapimage;
+Uart*	consuart;
 
 
 #define UART_LSR_THRE	(1<<5)
@@ -46,12 +54,20 @@ void uart_puthex64(unsigned long long v)
 		uart_putc(digits[(v >> i) & 0xf]);
 }
 
-void delay(unsigned int count)
+void
+microdelay(int us)
 {
-	unsigned int i;
+	uintptr t0;
 
-	for(i = 0; i < count; i++)
-		dummy(i);
+	t0 = rdtime();
+	while(rdtime() - t0 < (uintptr)us * (TIMEBASEFREQ/1000000));
+}
+
+void
+delay(int ms)
+{
+	while(--ms >= 0)
+		microdelay(1000);
 }
 
 
@@ -69,31 +85,9 @@ void main(void)
 
 	trapinit();
 
-    // testing 
-    Label l;
-	long v;
-	int n;
-
-	n = setlabel(&l);
-	uart_puts("setlabel returned ");
-	uart_puthex64(n);
-	uart_puts("\n");
-	if(n == 0)
-		gotolabel(&l);		/* should reappear above with n == 1 */
-
-	v = 0;
-	uart_puts("tas first  = "); uart_puthex64(tas(&v)); uart_puts("\n");	/* 0 */
-	uart_puts("tas second = "); uart_puthex64(tas(&v)); uart_puts("\n");	/* 1 */
-
-	v = 5;
-	uart_puts("cas match  = "); uart_puthex64(cmpswap(&v, 5, 9)); uart_puts("\n");	/* 1, v=9 */
-	uart_puts("cas miss   = "); uart_puthex64(cmpswap(&v, 5, 7)); uart_puts("\n");	/* 0, v=9 */
-	uart_puts("v = "); uart_puthex64(v); uart_puts("\n");				/* 9 */
-    
-
 	wdt_riscv_feed();
 	while(1){
-		delay(20000000);
+		delay(1000);
 		wdt_riscv_feed();
 	}
 }
