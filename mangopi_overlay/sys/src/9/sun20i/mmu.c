@@ -20,6 +20,13 @@ enum {
 	NTABLES = 24,	/* 19 needed: 1 root + 2 high kernel + 7 high MMIO + 2 identity kernel + 7 identity MMIO */
 };
 
+enum {
+	Dram512	= 512*1024*1024,
+	Probeoff = 0x100000,		/* 1MB into DRAM: above OpenSBI's
+								 * reserved 0x40000000-0x4005ffff,
+								 * below the kernel at 0x41000000 */
+};
+
 static uintptr tablestore[(NTABLES+1)*512]; /* +1 spare page so a page-aligned base always fits */
 static uintptr *tablebase;
 static int ntable;
@@ -83,6 +90,27 @@ mapident(uintptr pa, uintptr size, uintptr attr)
 }
 
 /*
+ * Map a range with level-1 (2MB) leaves rather than 4KB pages.
+ * Used only for the kernel's linear map of DRAM.
+ * User mappings come from putmmu() with 4KB leaves.
+ */
+static void
+mapblock(uintptr va, uintptr pa, uintptr size, uintptr attr)
+{
+	uintptr *l1, o;
+	int x2, x1;
+
+	for(o = 0; o < size; o += PGLSZ(1)){		/* PGLSZ(1) == 2MB */
+		x2 = PTLX(va+o, 2);
+		if(!(root[x2] & PTEVALID))
+			root[x2] = PAPTE((uintptr)newtable()) | PTEPTR;
+		l1 = (uintptr*)PTEPA(root[x2]);
+		x1 = PTLX(va+o, 1);
+		l1[x1] = PAPTE(pa+o) | attr;
+	}
+}
+
+/*
  * Build the tables and hand back the satp value.
  * Does NOT write satp - l.s does that, so the PA->VA transition happens
  * at a defined point in assembly rather than deep in a C call chain.
@@ -96,16 +124,15 @@ mmubootstrap(void)
 	root = newtable();
 
 	/* the permanent high-half mapping */
-	maphigh(PHYSTEXT, 512*1024, PTELEAFMEM);	/* kernel text/data/bss/stack/tables */
+	mapblock((uintptr)KADDR(PHYSDRAM), PHYSDRAM, DRAMMAX, PTELEAFMEM);	/* kernel text/data/bss/stack/tables */
 	maphigh(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);	/* PIO, CCU, timer, wdt, UARTs, i2c, ... */
 	maphigh(PHYSWDTRISCV, BY2PG, PTELEAFDEV);	/* riscv watchdog */
 	maphigh(PHYSPLIC, BY2PG, PTELEAFDEV);		/* PLIC priority */
 	maphigh(PHYSPLICEN, BY2PG, PTELEAFDEV);     /* PLIC enable, context 1 */
 	maphigh(PHYSPLICCTL, BY2PG, PTELEAFDEV);	/* PLIC threshold/claim, context 1 */
 
-	/* identity: mirrors the high mapping so drivers can keep using
-	 * physical addresses untill jump to highstart. */
-	mapident(PHYSTEXT, 512*1024, PTELEAFMEM);
+	/* identity: mirrors for the trampoline */
+	mapblock(PHYSDRAM, PHYSDRAM, DRAMMAX, PTELEAFMEM);
 	mapident(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);
 	mapident(PHYSWDTRISCV, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLIC, BY2PG, PTELEAFDEV);
@@ -147,4 +174,31 @@ mmulowdrop(void)
 	r[PTLX(PHYSPIO, 2)] = 0;
 	sfencevma();
     uart_puts("mmu: identity map dropped\n");   // debug output
+}
+
+
+/*
+ * D1 boards ship with either 512MB or 1GB, detect it: 
+ * on a 512MB part the DDR controller aliases, so a write 512MB up lands on the same cell as the one below.
+ * Probes 1MB into DRAM - below the kernel at PHYSTEXT, and above
+ * OpenSBI's PMP-protected 0x40000000-0x4005ffff, which would fault.
+ */
+uintptr
+dramsize(void)
+{
+	ulong *lo, *hi, save;
+	uintptr size;
+
+	lo = KADDR(PHYSDRAM + Probeoff);
+	hi = KADDR(PHYSDRAM + Probeoff + Dram512);
+
+	save = *lo;
+	*lo = 0x55aa55aa;
+	*hi = 0xaa55aa55;
+	coherence();
+	size = (*lo == 0x55aa55aa)? 2*Dram512: Dram512;
+	*lo = save;
+	coherence();
+
+	return size;
 }

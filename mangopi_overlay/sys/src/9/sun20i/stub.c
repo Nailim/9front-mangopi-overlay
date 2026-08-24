@@ -92,24 +92,18 @@ procrestore(Proc*)
 
 /* kernel */
 void
-uartputc(int)
-{
-    panic("uartputc");
-}
-void
-uartputs(char*, int)
-{
-    panic("uartputs");
-}
-void
 dumpstack(void)
 {
-    panic("dumpstack");
+    /* no stack trace yet - must not panic, panic() calls this */
+    // panic("dumpstack");
 }
 void
 exit(int)
 {
-    panic("exit");
+    splhi();
+	uart_puts("exit: halted\n");
+	for(;;)
+		idlehands();
 }
 void
 rebootcmd(int, char**)

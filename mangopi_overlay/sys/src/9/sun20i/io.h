@@ -3,6 +3,9 @@
  * All physical - drivers reach them through KADDR().
  */
 
+ 
+#define DRAMMAX (1024*1024*1024)    /* max expected ram on these boards */
+
 /* Low-speed peripheral block: pinctrl, CCU, timer, watchdog, UARTs,
  * i2c, ... - mapped as one range rather than page by page. */
 #define	PHYSPIO		0x02000000
