@@ -202,3 +202,18 @@ dramsize(void)
 
 	return size;
 }
+
+/*
+ * Return the number of bytes that can be accessed via KADDR(pa).
+ * If pa is not a valid argument to KADDR, return 0.
+ */
+uintptr
+cankaddr(uintptr pa)
+{
+	// if(pa < (uintptr)-KZERO)
+	// 	return -KZERO - pa;
+	// return 0;
+	if(pa >= PHYSDRAM && pa < PHYSDRAM+DRAMMAX)
+		return PHYSDRAM+DRAMMAX - pa;
+	return 0;
+}

@@ -34,24 +34,11 @@ VA(KMap*)
     panic("VA");
 }
 
-/* ../port/page.c */
-uintptr
-cankaddr(uintptr )
-{
-	panic("cankaddr");
-}
-
 /* ../port/portclock.c */
-// most ports keep kmapinval empty
-void
-kmapinval(void)
-{
-    panic("kmapinval");
-}
 int
 userureg(Ureg*)
 {
-    panic("kmapinval");
+    panic("userureg");
 }
 
 /* ../port/sysfile.c */
@@ -111,9 +98,12 @@ rebootcmd(int, char**)
     panic("rebootcmd");
 }
 uvlong
-fastticks(uvlong*)
+fastticks(uvlong* hz)
 {
-    panic("fastticks");
+    // panic("fastticks");
+    if(hz != nil)
+		*hz = TIMEBASEFREQ;
+	return rdtime();
 }
 int
 mntversion(Chan*, char*, int, int)
@@ -191,11 +181,6 @@ kickpager(void)
     panic("kickpager");
 }
 void
-timerset(Tval)
-{
-    panic("timerset");
-}
-void
 flushmmu(void)
 {
     panic("flushmmu");
@@ -209,11 +194,6 @@ void
 mmuswitch(Proc*)
 {
     panic("mmuswitch");
-}
-ulong
-perfticks(void)
-{
-    panic("perfticks");
 }
 void
 closeegrp(Egrp*)

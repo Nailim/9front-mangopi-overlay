@@ -31,21 +31,15 @@ trapinit(void)
 }
 
 
-int ticks;
-
 static void
-clockintr(void)		/* was timerintr */
+clockintr(Ureg *ureg)
 {
-	ticks++;
-	uart_puts("timer tick ");
-	uart_puthex64(ticks);
-	uart_puts("\n");
-
-	timer0ack();
+	timer0ack();			/* dismiss the hardware */
+	timerintr(ureg, 0);		/* portable clock: m->ticks, timer list, re-arm */
 }
 
 static void
-plicintr(void)
+plicintr(Ureg *ureg)
 {
 	int irq;
 
@@ -53,12 +47,10 @@ plicintr(void)
 
 	switch(irq){
 	case TIMER0IRQ:
-		clockintr();
+		clockintr(ureg);
 		break;
 	default:
-		uart_puts("trap: unhandled PLIC irq ");
-		uart_puthex64(irq);
-		uart_puts("\n");
+		iprint("trap: unhandled PLIC irq %d\n", irq);
 		break;
 	}
 	pliccomplete(irq);
@@ -72,10 +64,11 @@ trap(Ureg *ureg)
 
 	cause = ureg->cause;
 
+	/* interrupt switch - bit 63 set */
     if(cause & ((uintptr)1<<63)){
 		switch(cause & ~((uintptr)1<<63)){
 		case 9:
-			plicintr();
+			plicintr(ureg);
 			return;
 		default:
 			uart_puts("trap: unhandled interrupt, code ");
@@ -86,6 +79,7 @@ trap(Ureg *ureg)
 		}
 	}
 
+	/* exception switch - bit 63 clear */
     uart_puts("trap: exception, cause ");
 	uart_puthex64(cause);
 	uart_puts(" (");
@@ -99,7 +93,7 @@ trap(Ureg *ureg)
 	case 6:	uart_puts("store/AMO address misaligned"); break;
 	case 7:	uart_puts("store/AMO access fault"); break;
 	case 8:	uart_puts("environment call from U-mode"); break;
-	case 9:	uart_puts("environment call from S-mode"); break;
+	case 9:	plicintr(ureg); return;
 	case 12:	uart_puts("instruction page fault"); break;
 	case 13:	uart_puts("load page fault"); break;
 	case 15:	uart_puts("store/AMO page fault"); break;

@@ -39,7 +39,7 @@ TEXT _start(SB), $0
     MOVW $edata(SB), R9
     MOVW $end(SB), R11
 zerobss:
-    BGE R9, R11, zerodone
+    BGE R11, R9, zerodone
     MOV R0, 0(R9)
     ADD $8, R9
     JMP zerobss

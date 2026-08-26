@@ -83,8 +83,11 @@ uartputc(int c)
 void
 uartputs(char *s, int n)
 {
-	while(n-- > 0)
+	while(n-- > 0){
+		if(*s == '\n')
+			uart_putc('\r');
 		uart_putc(*s++);
+	}
 }
 
 void
@@ -96,9 +99,6 @@ confinit(void)
 
 	memsize = dramsize();
 	print("dram: %lludMB\n", (uvlong)memsize/(1024*1024));
-	// uart_puts("dram: ");
-	// uart_puthex64((unsigned long long)memsize/(1024*1024));
-	// uart_puts("\n");
 
 	conf.nmach = 1;
 
@@ -132,6 +132,8 @@ confinit(void)
 
 void main(void)
 {
+	active.machs[m->machno] = 1;
+
 	uart_puts("9sun20i: Plan9 riscv64 D1 kernel skeleton starting\n");
 
 	uart_puts("main at ");
@@ -144,11 +146,25 @@ void main(void)
 
 	trapinit();
 
+
 	confinit();
 
-	wdt_riscv_feed();
+	xinit();
+
+	printinit();
+
+	timersinit();
+
+	// initseg();
+	// links();
+	// chandevreset();
+	// pageinit();
+	// procinit0();
+
+
 	while(1){
-		delay(10000);
 		wdt_riscv_feed();
+		print("ticks %lud\n", m->ticks);
+		delay(1000);
 	}
 }

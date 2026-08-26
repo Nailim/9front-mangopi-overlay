@@ -13,12 +13,18 @@
 
 enum {
 	ModeContinuous	= 0<<7,
+	ModeSingle	= 1<<7,		/* count down once and stop, vs auto-reload */
 	Div1		= 0<<4,
 	SrcHosc		= 1<<2,	/* 24MHz - matches TIMEBASEFREQ */
 	Reload		= 1<<1,
 	Enable		= 1<<0,
 
 	Timer0Irq	= 1<<0,
+};
+
+enum {
+	MinPeriod	= TIMEBASEFREQ/(100*HZ),	/* 100us - don't livelock */
+	MaxPeriod	= TIMEBASEFREQ/HZ,			/* one tick, 10ms */
 };
 
 typedef struct Timerregs Timerregs;
@@ -57,4 +63,33 @@ timer0ack(void)
 	tr->irqsta = Timer0Irq;
 	sta = tr->irqsta;	/* readback - forces the clear to fully take effect */
     USED(sta);
+}
+
+void
+timer0set(ulong ticks)
+{
+	Timerregs *tr = (Timerregs*)KADDR(PHYSTIMER);
+
+	tr->intv0 = ticks;
+	tr->ctl0 = ModeSingle|Div1|SrcHosc|Reload|Enable;
+}
+
+void
+timerset(uvlong when)
+{
+	vlong period;
+
+	period = when - fastticks(nil);
+	if(period < MinPeriod)
+		period = MinPeriod;
+	else if(period > MaxPeriod)
+		period = MaxPeriod;
+
+	timer0set(period);
+}
+
+ulong
+perfticks(void)
+{
+	return rdtime();
 }
