@@ -34,13 +34,6 @@ VA(KMap*)
     panic("VA");
 }
 
-/* ../port/portclock.c */
-int
-userureg(Ureg*)
-{
-    panic("userureg");
-}
-
 /* ../port/sysfile.c */
 void
 evenaddr(uintptr)
@@ -52,29 +45,24 @@ evenaddr(uintptr)
 void
 procfork(Proc*)
 {
-    panic("procfork");
+    /* replace later */
 }
 void
-procsetup(Proc*)
+procsetup(Proc* p)
 {
-    panic("procsetup");
+    p->fpstate = FPinit;    // update later
 }
 
 /* ../port/proc.c */
 void
-cycles(uvlong *)
-{
-    panic("cycles");
-}
-void
 procsave(Proc*)
 {
-    panic("procsave");
+    /* no FP state in use - replace later */
 }
 void
 procrestore(Proc*)
 {
-    panic("procrestore");
+    /* nothing touches F/D registers yet - replace later */
 }
 
 /* kernel */
@@ -183,17 +171,21 @@ kickpager(void)
 void
 flushmmu(void)
 {
-    panic("flushmmu");
+    /* nothing cached to flush -replace later */
 }
 void
 mmurelease(Proc*)
 {
-    panic("mmurelease");
+    /* no per-process tables to free yet - replace later */
 }
 void
-mmuswitch(Proc*)
+mmuswitch(Proc* p)
 {
-    panic("mmuswitch");
+    USED(p);
+	/*
+	 * Kernel processes only. They share the one page table built by mmubootstrap, so there is nothing to install.
+     * Replaces later with satpset(p->satp) + sfencevma() once putmmu builds real per-process tables.
+	 */
 }
 void
 closeegrp(Egrp*)
@@ -206,9 +198,11 @@ dbgpc(Proc*)
     panic("dbgpc");
 }
 void
-kprocchild(Proc*, void (*)(void))
+kprocchild(Proc *p, void (*entry)(void))
 {
-    panic("kprocchild");
+    p->sched.pc = (uintptr)entry;
+	p->sched.sp = (uintptr)p - 16;		/* 16 clear bytes: a callee may spill its first arg to sp+8 */
+	*(void**)p->sched.sp = kprocchild;	/* fake saved pc, for getcallerpc */
 }
 void
 dupswap(Page*)
@@ -253,7 +247,9 @@ fpunoted(Proc*)
 void
 bootlinks(void)
 {
-    panic("bootlinks");
+	/*
+	 * No bootdir section in the CONF file yet, so no boot filesystem to register.
+	 */
 }
 void	(*proctrace)(Proc*, int, vlong);    /* Delete this when 'proc' is added to the CONF file */
 int

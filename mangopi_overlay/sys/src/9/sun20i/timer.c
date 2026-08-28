@@ -51,6 +51,8 @@ timer0init(ulong ticks)
 	tr->ctl0 = ModeContinuous|Div1|SrcHosc|Reload|Enable;
 	tr->irqen |= Timer0Irq;
 
+	m->cyclefreq = TIMEBASEFREQ;	/* what cycles() counts in - exported via Tos */
+
     plicenable(TIMER0IRQ, 1);
 }
 

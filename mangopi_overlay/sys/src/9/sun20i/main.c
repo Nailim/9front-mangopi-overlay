@@ -130,6 +130,15 @@ confinit(void)
 }
 
 
+static void
+footask(void*)
+{
+	for(;;){
+		print("%s: ticks %lud\n", up->text, m->ticks);
+		tsleep(&up->sleep, return0, nil, 1000);
+	}
+}
+
 void main(void)
 {
 	active.machs[m->machno] = 1;
@@ -146,7 +155,6 @@ void main(void)
 
 	trapinit();
 
-
 	confinit();
 
 	xinit();
@@ -155,16 +163,27 @@ void main(void)
 
 	timersinit();
 
-	// initseg();
-	// links();
-	// chandevreset();
-	// pageinit();
-	// procinit0();
+	initseg();
+	links();
+	chandevreset();
+	pageinit();
+	procinit0();
+
+	procinit0();
+
+	// userinit();
+	/* remove when initcode is in place and userinit can run */
+	up = nil;
+	kstrdup(&eve, "");
+
+	kproc("footask1", footask, nil);
+	kproc("footask2", footask, nil);
+	schedinit();		/* never returns */
 
 
 	while(1){
 		wdt_riscv_feed();
-		print("ticks %lud\n", m->ticks);
+		print("main ticks %lud\n", m->ticks);
 		delay(1000);
 	}
 }

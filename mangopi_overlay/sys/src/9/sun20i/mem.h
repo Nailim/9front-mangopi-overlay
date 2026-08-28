@@ -117,3 +117,4 @@
 #define PTELEAFMEM	(PTELEAF|PTE_THEAD_C|PTE_THEAD_SH)	/* MT_PMA - normal RAM */
 #define PTELEAFDEV	(PTELEAF|PTE_THEAD_SO)			/* MT_IO - device/MMIO */
 
+#define	SSTATUS_SPP	(1<<8)		/* previous privilege: 1 = S-mode, 0 = U-mode */
