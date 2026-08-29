@@ -4,6 +4,7 @@
 #include "dat.h"
 #include "fns.h"
 #include "io.h"
+#include "../port/error.h"
 
 /* ../port/devcons.c */
 char*
@@ -17,28 +18,15 @@ isaconfig(char*, int, ISAConf*)
 	return 0;
 }
 
-/* ../port/cache.c */
-KMap*
-kmap(Page*)
-{
-    panic("kmap");
-}
-void
-kunmap(KMap*)
-{
-    panic("kunmap");
-}
-int
-VA(KMap*)
-{
-    panic("VA");
-}
 
 /* ../port/sysfile.c */
 void
-evenaddr(uintptr)
+evenaddr(uintptr addr)
 {
-    panic("evenaddr");
+    if(addr & 3){
+		postnote(up, 1, "sys: odd address", NDebug);
+		error(Ebadarg);
+	}
 }
 
 /* ../port/sysproc.c */
@@ -148,55 +136,18 @@ swapcount(uintptr)
 {
     panic("swapcount");
 }
-void
-putmmu(uintptr, uintptr, Page*)
-{
-    panic("putmmu");
-}
-uintptr
-userpc(void)
-{
-    panic("userpc");
-}
-void
-checkmmu(uintptr, uintptr)
-{
-    panic("checkmmu");
-}
+
 void
 kickpager(void)
 {
     panic("kickpager");
 }
 void
-flushmmu(void)
-{
-    /* nothing cached to flush -replace later */
-}
-void
-mmurelease(Proc*)
-{
-    /* no per-process tables to free yet - replace later */
-}
-void
-mmuswitch(Proc* p)
-{
-    USED(p);
-	/*
-	 * Kernel processes only. They share the one page table built by mmubootstrap, so there is nothing to install.
-     * Replaces later with satpset(p->satp) + sfencevma() once putmmu builds real per-process tables.
-	 */
-}
-void
 closeegrp(Egrp*)
 {
     panic("closeegrp");
 }
-uintptr
-dbgpc(Proc*)
-{
-    panic("dbgpc");
-}
+
 void
 kprocchild(Proc *p, void (*entry)(void))
 {
@@ -262,6 +213,9 @@ callwithureg(void(*)(Ureg*))
 {
     panic("callwithureg");
 }
+
+
+
 
 
 

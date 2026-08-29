@@ -6,6 +6,8 @@
 #include "pool.h"
 #include "io.h"
 
+#include "tos.h"	// maybe remove later
+
 void dummy(unsigned int);
 
 void trapinit(void);
@@ -139,6 +141,82 @@ footask(void*)
 	}
 }
 
+static void
+mmutask(void*)
+{
+	enum { Testva = 0x100000 };
+	Page *pg;
+	ulong *p;
+
+	pg = newpage(0, nil);
+	memset(KADDR(pg->pa), 0, BY2PG);
+
+	putmmu(Testva, PPN(pg->pa) | PTEVALID | PTEWRITE, pg);
+
+	p = (ulong*)Testva;
+	*p = 0xcafebabe;
+	print("mmutest: satp=%#p pa=%#p\n", up->satp, pg->pa);
+	print("mmutest: via user va %#lux\n", *p);
+	print("mmutest: via kzero   %#lux\n", *(ulong*)KADDR(pg->pa));
+
+	flushmmu();
+	print("mmutest: after flushmmu, kzero %#lux\n", *(ulong*)KADDR(pg->pa));
+
+	print("mmutest: freecount before release %lud\n", palloc.freecount);
+	mmurelease(up);
+	print("mmutest: after mmurelease        %lud (want +3)\n", palloc.freecount);
+	putpage(pg);
+	print("mmutest: after putpage           %lud (want +4)\n", palloc.freecount);
+
+	for(;;)
+		tsleep(&up->sleep, return0, nil, 1000);
+}
+
+static ulong usercode[] = {
+	// 0x00000073,	/* ecall */
+	// 0x0000006f,	/* j . - spin, so the timer keeps trapping from U-mode */
+
+	// 0x00600413,	/* addi x8, x0, 6	- ALARM, the syscall number */
+	// 0x00000073,	/* ecall */
+	// 0xff9ff06f,	/* j -8			- back to the addi, loop forever */
+
+	0x00000413,	/* addi x8, x0, 0	- the argument */
+	0x00813423,	/* sd   x8, 8(x2)	- 0(FP): where libc's stub spills it */
+	0x00600413,	/* addi x8, x0, 6	- ALARM, the syscall number */
+	0x00000073,	/* ecall */
+	0xff1ff06f,	/* j -16		- back to the first addi */
+};
+
+static void
+usertask(void*)
+{
+	KMap *k;
+	Page *p;
+
+	up->seg[SSEG] = newseg(SG_STACK | SG_NOEXEC, USTKTOP-USTKSIZE, USTKSIZE/BY2PG);
+	up->seg[TSEG] = newseg(SG_TEXT | SG_RONLY, UTZERO, 1);
+	up->seg[TSEG]->flushme = 1;
+
+	p = newpage(UTZERO, nil);
+	k = kmap(p);
+	memset((uchar*)VA(k), 0, BY2PG);
+	memmove((uchar*)VA(k)+32, usercode, sizeof usercode);	/* +32: where the a.out header would be */
+	kunmap(k);
+	segpage(up->seg[TSEG], p);
+
+	up->kp = 0;
+	up->noswap = 0;
+	up->privatemem = 0;
+	procpriority(up, PriNormal, 0);
+	procsetup(up);
+
+	flushmmu();
+
+	print("usertask: entering user mode at %#p\n", (uintptr)UENTRY);
+	touser(USTKTOP - sizeof(Tos) - 64);
+}
+
+
 void main(void)
 {
 	active.machs[m->machno] = 1;
@@ -167,7 +245,6 @@ void main(void)
 	links();
 	chandevreset();
 	pageinit();
-	procinit0();
 
 	procinit0();
 
@@ -178,6 +255,9 @@ void main(void)
 
 	kproc("footask1", footask, nil);
 	kproc("footask2", footask, nil);
+	print("mmutest: freecount before start %lud\n", palloc.freecount);
+	kproc("mmutask", mmutask, nil);
+	kproc("usertask", usertask, nil);
 	schedinit();		/* never returns */
 
 

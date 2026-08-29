@@ -5,6 +5,7 @@
 #define CSR_SSTATUS 0x100
 #define CSR_SIE     0x104
 #define CSR_STVEC   0x105
+#define CSR_SSCRATCH    0x140
 #define CSR_SEPC    0x141
 #define CSR_SCAUSE  0x142
 #define CSR_STVAL   0x143
@@ -18,6 +19,9 @@
 
 
 #define CSR_SATP 0x180
+
+
+#define FENCEI	WORD $0x0000100F	/* fence.i */
 
 
 /*
@@ -69,6 +73,13 @@ TEXT highstart(SB), $-8
     MOVW $mach0(SB), R7		// m = &mach0, pinned
     MOV R0, R6			    // up = nil
 
+    MOVW CSR(CSR_SSTATUS), R8	// allow the kernel to touch user pages
+    MOV $SSTATUS_SUM, R9
+    OR R9, R8
+    MOVW R8, CSR(CSR_SSTATUS)
+
+    MOVW R0, CSR(CSR_SSCRATCH)	// in-kernel invariant - the boot chain may leave junk here
+
     JAL R1, uarthigh(SB)	// console -> high VA before the identity map goes
     JAL R1, mmulowdrop(SB)	// retire the identity mapping
 
@@ -80,18 +91,36 @@ TEXT setstvec(SB), $0
     MOVW R8, CSR(CSR_STVEC)
     RET
 
-TEXT trapvec(SB), $-8   // negative frame = no auto RA-save prologue (any call inside would trigger one otherwise)
-    ADD $-UREGSIZE, R2	// R2 = new Ureg frame base; old sp = R2+UREGSIZE (not yet saved anywhere)
+TEXT trapvec(SB), $-8
+    // sscratch holds m in U-mode, 0 in S-mode: one atomic swap both says
+    // where the trap came from and buys a usable register.
+    CSRRW CSR(CSR_SSCRATCH), R2, R2	// R2 = m (user) or 0 (kernel); sscratch = pre-trap sp
+    BEQ R2, trapkernel
 
-    MOV R1, 8(R2)		// save true r1 first - it's about to become scratch
+    // from user. Every register except R2 still holds its user value, so
+    // nothing may be overwritten before it reaches the Ureg.
+    MOV 16(R2), R2		// R2 = m->proc - offset fixed by Mach in dat.h
+    ADD $-UREGSIZE, R2		// Ureg at the top of the proc's kernel stack
+    MOV R1, 8(R2)		// save true R1 first - it becomes scratch
+    MOVW CSR(CSR_SSCRATCH), R1
+    MOV R1, 16(R2)		// ureg->sp = user sp
+    MOVW R0, CSR(CSR_SSCRATCH)	// restore the in-kernel invariant
+    JMP trapsave
+
+trapkernel:
+    CSRRW CSR(CSR_SSCRATCH), R2, R2	// undo the swap: R2 = kernel sp, sscratch = 0
+    ADD $-UREGSIZE, R2
+    MOV R1, 8(R2)
     MOV R2, R1
-    ADD $UREGSIZE, R1	// R1 = old sp
-    MOV R1, 16(R2)		// ureg->sp
+    ADD $UREGSIZE, R1
+    MOV R1, 16(R2)		// ureg->sp = pre-trap kernel sp
 
+trapsave:
     MOV R3, 24(R2)
     MOV R4, 32(R2)
     MOV R5, 40(R2)
-    // up/m: restoring these is only correct while traps come from kernel mode - later in implementation we must reload, not trust, them
+    // up/m: the saved values are the user's on a user trap, and are
+    // replaced below before trap() runs
     MOV R6, 48(R2)
     MOV R7, 56(R2)
     MOV R8, 64(R2)
@@ -137,6 +166,16 @@ TEXT trapvec(SB), $-8   // negative frame = no auto RA-save prologue (any call i
     MOVW $0, R1
     MOV R1, 288(R2)		// ureg->curmode - debugger-only field (libmach j.c), no hardware source
 
+    // Only now, with the user's R6/R7 safe in the Ureg, may the kernel's
+    // be installed - and only for user traps. sched() has a window where
+    // up is set but m->proc is still nil, so a kernel trap must keep the
+    // values it interrupted rather than re-deriving them.
+    MOV 256(R2), R1
+    AND $SSTATUS_SPP, R1
+    BNE R1, trapcall
+    MOVW $mach0(SB), R7		// m
+    MOV 16(R7), R6		// up = m->proc
+trapcall:
     MOV R2, R8			// arg0 = ureg
     ADD $-16, R2		// leave a shadow-slot gap below ureg for trap()'s own prologue to write into
     JAL R1, trap(SB)
@@ -145,6 +184,13 @@ TEXT trapvec(SB), $-8   // negative frame = no auto RA-save prologue (any call i
     MOV 0(R2), R1
     MOVW R1, CSR(CSR_SEPC)	// sepc = ureg->pc, in case trap() advanced it
 
+    // returning to user? sscratch must hold m again for the next trap
+    MOV 256(R2), R1
+    AND $SSTATUS_SPP, R1
+    BNE R1, trapret
+    MOVW $mach0(SB), R1
+    MOVW R1, CSR(CSR_SSCRATCH)
+trapret:
     MOV 8(R2), R1
     MOV 24(R2), R3
     MOV 32(R2), R4
@@ -285,6 +331,32 @@ TEXT getcallerpc(SB), $0
 
 TEXT dummy(SB), $0
     RET                 // empty function - cheap busy-wait
+
+
+TEXT satpset(SB), $0
+    MOVW R8, CSR(CSR_SATP)
+    SFENCEVMA			// the fence is part of the contract - callers can't forget it
+    RET
+
+TEXT fencei(SB), $0
+    FENCEI
+    RET
+
+
+TEXT touser(SB), $-8
+    MOV $SSTATUS_SPP, R9
+    CSRRC CSR(CSR_SSTATUS), R9, R0	// SPP = 0: SRET lands in U-mode
+    MOV $SSTATUS_SPIE, R9
+    CSRRS CSR(CSR_SSTATUS), R9, R0	// SPIE = 1: interrupts on after SRET
+
+    MOVW $mach0(SB), R9
+    MOVW R9, CSR(CSR_SSCRATCH)		// the next trap from user finds m here
+
+    MOV $UENTRY, R9
+    MOVW R9, CSR(CSR_SEPC)
+
+    MOV R8, R2				// user stack pointer (the argument)
+    SYS $0x102				// SRET
 
 
 GLOBL stack(SB), $16384

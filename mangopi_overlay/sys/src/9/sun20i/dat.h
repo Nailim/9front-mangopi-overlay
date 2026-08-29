@@ -79,6 +79,7 @@ struct Conf
 struct PMMU
 {
 	uintptr	satp;
+	Page	*mmuroot;		/* this process's Sv39 root table */
 	Page	*mmuused, *mmufree;
 };
 

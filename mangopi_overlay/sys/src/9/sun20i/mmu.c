@@ -27,10 +27,17 @@ enum {
 								 * below the kernel at 0x41000000 */
 };
 
+enum {
+	Nuserslot = 256,	/* root slots 0-255 are the Sv39 low half */
+};
+
+
 static uintptr tablestore[(NTABLES+1)*512]; /* +1 spare page so a page-aligned base always fits */
 static uintptr *tablebase;
 static int ntable;
 static uintptr *root;   /* PA of the root table */
+
+static uintptr kernelsatp;
 
 static uintptr*
 newtable(void)
@@ -142,6 +149,8 @@ mmubootstrap(void)
     satp = MKSATP((uintptr)root);
     uart_puts("mmu: satp="); uart_puthex64(satp); uart_puts("\n");  // debug output
 
+	kernelsatp = satp;
+
 	return satp;
 }
 
@@ -216,4 +225,176 @@ cankaddr(uintptr pa)
 	if(pa >= PHYSDRAM && pa < PHYSDRAM+DRAMMAX)
 		return PHYSDRAM+DRAMMAX - pa;
 	return 0;
+}
+
+
+static uintptr*
+kernelroot(void)
+{
+	return KADDR((uintptr)root);	/* root holds a PA; we run high now */
+}
+
+
+/*
+ * Give p its own root table: user half empty, kernel half copied from
+ * the boot root. The copy is safe only because mmubootstrap() creates
+ * every kernel level-2 entry up front and nothing adds more later.
+ */
+static void
+mmurootalloc(Proc *p)
+{
+	uintptr *r;
+	Page *pg;
+
+	pg = newpage(0, nil);
+	r = KADDR(pg->pa);
+	memset(r, 0, Nuserslot*BY2WD);
+	memmove(&r[Nuserslot], &kernelroot()[Nuserslot], BY2PG - Nuserslot*BY2WD);
+	coherence();
+	p->mmuroot = pg;
+	p->satp = MKSATP(pg->pa);
+}
+
+/*
+ * PTE for va at the given level in up's tables, allocating intermediate
+ * tables from up->mmufree. nil when that list is empty; the caller
+ * refills it and retries.
+ */
+static uintptr*
+mmuwalk(uintptr va, int level)
+{
+	uintptr *table, pte;
+	Page *pg;
+	int i, x;
+
+	table = KADDR(up->mmuroot->pa);
+	for(i = PTLEVELS-1; i > level; i--){
+		x = PTLX(va, i);
+		pte = table[x];
+		if(pte & PTEVALID){
+			table = KADDR(PTEPA(pte));
+			continue;
+		}
+		pg = up->mmufree;
+		if(pg == nil)
+			return nil;
+		up->mmufree = pg->next;
+		pg->next = up->mmuused;
+		up->mmuused = pg;
+		memset(KADDR(pg->pa), 0, BY2PG);
+		coherence();
+		table[x] = PAPTE(pg->pa) | PTEPTR;
+		table = KADDR(pg->pa);
+	}
+	return &table[PTLX(va, level)];
+}
+
+/*
+ * Recycle p's table pages onto its free list and empty the user half of
+ * its root - the pager has invalidated its mappings, or it is exiting.
+ */
+static void
+mmufree(Proc *p)
+{
+	Page *pg, *next;
+
+	if(p->mmuroot != nil)
+		memset(KADDR(p->mmuroot->pa), 0, Nuserslot*BY2WD);
+	for(pg = p->mmuused; pg != nil; pg = next){
+		next = pg->next;
+		pg->next = p->mmufree;
+		p->mmufree = pg;
+	}
+	p->mmuused = nil;
+}
+
+void
+putmmu(uintptr va, uintptr pa, Page *pg)
+{
+	uintptr *pte, attr;
+	Page *new;
+	int s;
+
+	if(up->mmuroot == nil){
+		mmurootalloc(up);
+		s = splhi();
+		satpset(up->satp);	/* sched may not run before we return to user */
+		splx(s);
+	}
+
+	s = splhi();
+	while((pte = mmuwalk(va, 0)) == nil){
+		spllo();
+		new = newpage(0, nil);
+		splhi();
+		new->next = up->mmufree;
+		up->mmufree = new;
+	}
+
+	/*
+	 * PTERONLY and PTECACHED are 0, so they are tested by their opposites.
+	 * R is always present: W without R is a reserved encoding. 
+	 * A and D are always present: C906 has no hardware A/D
+	 * update, and a leaf without them faults on every access
+	 */
+	attr = PTEVALID|PTEREAD|PTEUSER|PTEACCESSED|PTEDIRTY;
+	if(pa & PTEWRITE)
+		attr |= PTEWRITE;
+	if((pa & PTENOEXEC) == 0)
+		attr |= PTEEXEC;
+	if(pa & (PTEUNCACHED|PTEDEVICE))
+		attr |= PTE_THEAD_SO;
+	else
+		attr |= PTE_THEAD_C|PTE_THEAD_SH;
+
+	*pte = PAPTE(PPN(pa)) | attr;
+	coherence();
+	sfencevma();
+
+	if(needtxtflush(pg)){
+		fencei();
+		donetxtflush(pg);
+	}
+	splx(s);
+}
+void
+checkmmu(uintptr, uintptr)
+{
+    /* nothing for now */
+}
+void
+flushmmu(void)
+{
+    int s;
+
+	s = splhi();
+	up->newtlb = 1;
+	mmuswitch(up);
+	splx(s);
+}
+void
+mmurelease(Proc* p)
+{
+    mmuswitch(nil);
+	mmufree(p);
+	freepages(p->mmufree, nil, 0);
+	p->mmufree = nil;
+	if(p->mmuroot != nil){
+		putpage(p->mmuroot);
+		p->mmuroot = nil;
+	}
+	p->satp = 0;
+}
+void
+mmuswitch(Proc* p)
+{
+    if(p == nil || p->mmuroot == nil){
+		satpset(kernelsatp);	/* kernel proc: the boot tables suffice */
+		return;
+	}
+	if(p->newtlb){
+		mmufree(p);
+		p->newtlb = 0;
+	}
+	satpset(p->satp);
 }

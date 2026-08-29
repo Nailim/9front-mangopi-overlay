@@ -24,7 +24,7 @@
 #define	PGROUND(s)	ROUND(s, BY2PG)
 
 #define MAXMACH 1
-#define KSTACK 4096
+#define KSTACK	(8*1024)
 
 /*
  * Physical layout
@@ -118,3 +118,12 @@
 #define PTELEAFDEV	(PTELEAF|PTE_THEAD_SO)			/* MT_IO - device/MMIO */
 
 #define	SSTATUS_SPP	(1<<8)		/* previous privilege: 1 = S-mode, 0 = U-mode */
+
+
+#define	PTENOEXEC	(1<<9)		/* absence of PTEEXEC */
+#define	PTEDEVICE	(1<<10)		/* MMIO segment: strongly ordered */
+
+#define	SSTATUS_SUM	(1<<18)		/* permit S-mode access to PTEUSER pages */
+
+#define	SSTATUS_SPIE	(1<<5)
+#define	UENTRY		(UTZERO+32)	/* a.out header is 32 bytes; INITTEXT = 4128 */
