@@ -1,0 +1,17 @@
+dev
+	root
+	cons
+	env
+	pipe
+	proc
+	mnt
+	srv
+	shr
+	dup
+
+port
+	int cpuserver = 0;
+
+bootdir
+	boot
+

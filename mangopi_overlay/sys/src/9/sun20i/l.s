@@ -166,13 +166,11 @@ trapsave:
     MOVW $0, R1
     MOV R1, 288(R2)		// ureg->curmode - debugger-only field (libmach j.c), no hardware source
 
-    // Only now, with the user's R6/R7 safe in the Ureg, may the kernel's
-    // be installed - and only for user traps. sched() has a window where
-    // up is set but m->proc is still nil, so a kernel trap must keep the
-    // values it interrupted rather than re-deriving them.
+    // Only now, with the user's R6/R7 safe in the Ureg, may the kernel's be installed - and only for user traps.
     MOV 256(R2), R1
     AND $SSTATUS_SPP, R1
     BNE R1, trapcall
+    MOVW $setSB(SB), R3		// kernel static base - user code owns R3
     MOVW $mach0(SB), R7		// m
     MOV 16(R7), R6		// up = m->proc
 trapcall:
@@ -181,11 +179,18 @@ trapcall:
     JAL R1, trap(SB)
     ADD $16, R2			// undo - R2 is back at the ureg frame base for the restore sequence below
 
+
+TEXT forkret(SB), $-8		// fork child resumes here with R2 = Ureg base
     MOV 0(R2), R1
     MOVW R1, CSR(CSR_SEPC)	// sepc = ureg->pc, in case trap() advanced it
 
-    // returning to user? sscratch must hold m again for the next trap
+    // Restore sstatus. SRET leaves SPP = 0, so any nested trap or context
+    // switch inside this one has already destroyed the value hardware set
+    // at entry. SIE is reloaded from SPIE by SRET, so the saved SIE=0 is
+    // harmless - and usefully keeps interrupts off through the restore.
     MOV 256(R2), R1
+    MOVW R1, CSR(CSR_SSTATUS)
+
     AND $SSTATUS_SPP, R1
     BNE R1, trapret
     MOVW $mach0(SB), R1

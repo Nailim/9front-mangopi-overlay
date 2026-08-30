@@ -389,7 +389,9 @@ void
 mmuswitch(Proc* p)
 {
     if(p == nil || p->mmuroot == nil){
-		satpset(kernelsatp);	/* kernel proc: the boot tables suffice */
+		if(p != nil)
+			p->newtlb = 0;		/* nothing mapped yet */
+		satpset(kernelsatp);
 		return;
 	}
 	if(p->newtlb){

@@ -37,6 +37,7 @@ PORT=\
 	random.$O\
 	rdb.$O\
 	syscallfmt.$O\
+	userinit.$O\
 
 OBJ=\
 	l.$O\
@@ -47,6 +48,8 @@ OBJ=\
 	plic.$O\
 	wdt.$O\
 	stub.$O\
+	$CONF.root.$O\
+	$CONF.rootc.$O\
 	$DEVS\
 	$PORT\
 
@@ -58,4 +61,12 @@ LIB=\
 $p$CONF:D:	$OBJ $CONF.$O $LIB
 	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -l -o $target $prereq
 
+<../boot/bootmkfile
 <../port/portmkfile
+<|../port/mkbootrules $CONF
+
+<../port/portmkfile
+
+initcode.out:	init9.$O initcode.$O /$objtype/lib/libc.a
+#	$LD -l -R1 -s -o $target $prereq
+	$LD -l -R1 -o $target $prereq

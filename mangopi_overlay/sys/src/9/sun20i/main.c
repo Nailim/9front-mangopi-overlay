@@ -132,88 +132,78 @@ confinit(void)
 }
 
 
-static void
-footask(void*)
+void
+init0(void)
 {
-	for(;;){
-		print("%s: ticks %lud\n", up->text, m->ticks);
-		tsleep(&up->sleep, return0, nil, 1000);
+	char buf[2*KNAMELEN], **sp;
+
+	uart_puts("init0: entered\n");
+	chandevinit();
+	uart_puts("init0: chandevinit done\n");
+
+	if(!waserror()){
+		snprint(buf, sizeof buf, "riscv64 %s", conffile);
+		ksetenv("terminal", buf, 0);
+		ksetenv("cputype", "riscv64", 0);
+		if(cpuserver)
+			ksetenv("service", "cpu", 0);
+		else
+			ksetenv("service", "terminal", 0);
+		poperror();
 	}
+	kproc("alarm", alarmkproc, 0);
+	uart_puts("init0: alarm kproc started\n");
+
+	/*
+	 * initcode's stack. 0(SP) is the callee's saved-LINK slot and
+	 * arguments start at 0(FP) = SP+BY2WD, so startboot's second
+	 * argument, argv, is read from SP+2*BY2WD.
+	 */
+	sp = (char**)(USTKTOP - sizeof(Tos) - 8 - sizeof(sp[0])*6);
+	sp[0] = nil;			/* saved LINK */
+	sp[1] = nil;			/* arg0 slot; init9.s also sets R8 */
+	sp[2] = (char*)&sp[3];		/* argv */
+	sp[3] = (char*)&sp[5];		/* argv[0] */
+	sp[4] = nil;			/* argv terminator */
+	strcpy((char*)&sp[5], "boot");
+
+	uart_puts("init0: touser sp=");
+	uart_puthex64((uintptr)sp);
+	uart_puts("\n");
+	splhi();
+
+	{
+		ulong *t;
+		int i;
+
+		t = (ulong*)UTZERO;		/* SUM is set; the read faults the page in */
+		uart_puts("code");
+		for(i = 8; i < 14; i++){	/* t[8] is offset 32 = UENTRY */
+			uart_puts(" ");
+			uart_puthex64(t[i]);
+		}
+		uart_puts("\n");
+	}
+
+	touser((uintptr)sp);
 }
 
 static void
-mmutask(void*)
+pstask(void*)
 {
-	enum { Testva = 0x100000 };
-	Page *pg;
-	ulong *p;
+	Proc *p;
+	int i;
 
-	pg = newpage(0, nil);
-	memset(KADDR(pg->pa), 0, BY2PG);
-
-	putmmu(Testva, PPN(pg->pa) | PTEVALID | PTEWRITE, pg);
-
-	p = (ulong*)Testva;
-	*p = 0xcafebabe;
-	print("mmutest: satp=%#p pa=%#p\n", up->satp, pg->pa);
-	print("mmutest: via user va %#lux\n", *p);
-	print("mmutest: via kzero   %#lux\n", *(ulong*)KADDR(pg->pa));
-
-	flushmmu();
-	print("mmutest: after flushmmu, kzero %#lux\n", *(ulong*)KADDR(pg->pa));
-
-	print("mmutest: freecount before release %lud\n", palloc.freecount);
-	mmurelease(up);
-	print("mmutest: after mmurelease        %lud (want +3)\n", palloc.freecount);
-	putpage(pg);
-	print("mmutest: after putpage           %lud (want +4)\n", palloc.freecount);
-
-	for(;;)
-		tsleep(&up->sleep, return0, nil, 1000);
-}
-
-static ulong usercode[] = {
-	// 0x00000073,	/* ecall */
-	// 0x0000006f,	/* j . - spin, so the timer keeps trapping from U-mode */
-
-	// 0x00600413,	/* addi x8, x0, 6	- ALARM, the syscall number */
-	// 0x00000073,	/* ecall */
-	// 0xff9ff06f,	/* j -8			- back to the addi, loop forever */
-
-	0x00000413,	/* addi x8, x0, 0	- the argument */
-	0x00813423,	/* sd   x8, 8(x2)	- 0(FP): where libc's stub spills it */
-	0x00600413,	/* addi x8, x0, 6	- ALARM, the syscall number */
-	0x00000073,	/* ecall */
-	0xff1ff06f,	/* j -16		- back to the first addi */
-};
-
-static void
-usertask(void*)
-{
-	KMap *k;
-	Page *p;
-
-	up->seg[SSEG] = newseg(SG_STACK | SG_NOEXEC, USTKTOP-USTKSIZE, USTKSIZE/BY2PG);
-	up->seg[TSEG] = newseg(SG_TEXT | SG_RONLY, UTZERO, 1);
-	up->seg[TSEG]->flushme = 1;
-
-	p = newpage(UTZERO, nil);
-	k = kmap(p);
-	memset((uchar*)VA(k), 0, BY2PG);
-	memmove((uchar*)VA(k)+32, usercode, sizeof usercode);	/* +32: where the a.out header would be */
-	kunmap(k);
-	segpage(up->seg[TSEG], p);
-
-	up->kp = 0;
-	up->noswap = 0;
-	up->privatemem = 0;
-	procpriority(up, PriNormal, 0);
-	procsetup(up);
-
-	flushmmu();
-
-	print("usertask: entering user mode at %#p\n", (uintptr)UENTRY);
-	touser(USTKTOP - sizeof(Tos) - 64);
+	for(;;){
+		tsleep(&up->sleep, return0, nil, 2000);
+		for(i = 0; (p = proctab(i)) != nil; i++){
+			if(p->state == Dead)
+				continue;
+			print("ps: %lud %s %s %s\n", p->pid, p->text,
+				statename[p->state], p->psstate != nil? p->psstate: "");
+		}
+		print("ps: ---\n");
+	}
 }
 
 
@@ -239,6 +229,8 @@ void main(void)
 
 	printinit();
 
+	quotefmtinstall();
+
 	timersinit();
 
 	initseg();
@@ -248,16 +240,9 @@ void main(void)
 
 	procinit0();
 
-	// userinit();
-	/* remove when initcode is in place and userinit can run */
-	up = nil;
-	kstrdup(&eve, "");
+	userinit();
 
-	kproc("footask1", footask, nil);
-	kproc("footask2", footask, nil);
-	print("mmutest: freecount before start %lud\n", palloc.freecount);
-	kproc("mmutask", mmutask, nil);
-	kproc("usertask", usertask, nil);
+	kproc("ps", pstask, nil);
 	schedinit();		/* never returns */
 
 
@@ -267,3 +252,12 @@ void main(void)
 		delay(1000);
 	}
 }
+
+
+void
+setupwatchpts(Proc *, Watchpt *, int n)
+{
+	if(n > 0)
+		error("no watchpoints");
+}
+

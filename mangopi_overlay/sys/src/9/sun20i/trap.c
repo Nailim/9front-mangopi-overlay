@@ -37,8 +37,6 @@ clockintr(Ureg *ureg)
 	wdt_riscv_feed();		/* the old feed loop went away with schedinit() */
 	timer0ack();			/* dismiss the hardware */
 	timerintr(ureg, 0);		/* portable clock: m->ticks, timer list, re-arm */
-	if(m->ticks % 100 == 0)
-		iprint("clock: ticks %lud user %d\n", m->ticks, userureg(ureg));
 }
 
 static int
@@ -133,17 +131,12 @@ trap(Ureg *ureg)
 
 	cause = ureg->cause;
 
-
 	if(cause == 8){			/* environment call from U-mode */
 		syscall(ureg);
 		return;
 	}
 
 	user = userureg(ureg);
-
-	if(user && ureg->pc >= KZERO)
-		panic("user trap: kernel pc=%#p cause=%lud tval=%#p sp=%#p",
-			ureg->pc, cause, ureg->tval, ureg->sp);
 
 	if(user)
 		kenter(ureg);		/* user branch only */
@@ -177,15 +170,11 @@ trap(Ureg *ureg)
 
 	splhi();
 
-	if(user && ureg->pc >= KZERO)
-		panic("return to user: kernel pc=%#p cause=%lud", ureg->pc, cause);
-
 	if(user){
 		if(up->procctl || up->nnote)
 			donotify(ureg);
 		kexit(ureg);
 	}
-
 }
 
 
@@ -205,19 +194,13 @@ syscall(Ureg *ureg)
 	ureg->pc += 4;
 
 	scallnr = ureg->arg;			/* R8 */
-	dosyscall(scallnr, (Sargs*)(ureg->sp + BY2WD), &ureg->ret);
 
-	/* debug - remove later */
-	if(m->ticks % 100 == 0)
-		iprint("syscall: nr %lud ret %#p\n", scallnr, ureg->ret);
+	dosyscall(scallnr, (Sargs*)(ureg->sp + BY2WD), &ureg->ret);
 
 	if(up->procctl || up->nnote)
 		donotify(ureg);
 	if(up->delaysched)
 		sched();
-
-	if(ureg->pc >= KZERO)
-		panic("syscall return: kernel pc=%#p nr=%lud sp=%#p", ureg->pc, scallnr, ureg->sp);
 	
 	kexit(ureg);
 }
@@ -262,4 +245,32 @@ setregisters(Ureg *ureg, char *pureg, char *uva, int n)
 }
 
 
+uintptr
+execregs(uintptr entry, int argc, char *argv[], Tos *tos)
+{
+	uintptr *sp = (void*)argv;
+	Ureg *ureg;
+
+	*--sp = argc;			/* SP+0 = argc, SP+8 = argv[0] */
+
+	ureg = up->dbgreg;
+	ureg->sp = (uintptr)sp;
+	ureg->pc = entry;
+	ureg->r1 = 0;			/* link */
+
+	return (uintptr)tos;		/* arrives in R8 for _main */
+}
+
+void
+forkchild(Proc *p, Ureg *ureg)
+{
+	Ureg *cureg;
+
+	p->sched.pc = (uintptr)forkret;
+	p->sched.sp = (uintptr)p - sizeof(Ureg);
+
+	cureg = (Ureg*)p->sched.sp;
+	memmove(cureg, ureg, sizeof(Ureg));
+	cureg->ret = 0;			/* child's fork() returns 0 */
+}
 

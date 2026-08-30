@@ -82,44 +82,9 @@ fastticks(uvlong* hz)
 	return rdtime();
 }
 int
-mntversion(Chan*, char*, int, int)
-{
-    panic("mntversion");
-}
-Chan*
-mntauth(Chan*, char*)
-{
-    panic("mntauth");
-}
-void
-srvrenameuser(char*, char*)
-{
-    panic("srvrenameuser");
-}
-void
-shrrenameuser(char*, char*)
-{
-    panic("shrrenameuser");
-}
-void
-mntrahinit(Mntrah *rah)
-{
-    panic("mntrahinit");
-}
-long
-mntrahread(Mntrah *rah, Chan *c, uchar *buf, long len, vlong off)
-{
-    panic("mntrahread");
-}
-int
 needpages(void*)
 {
     panic("needpages");
-}
-void
-muxclose(Mnt*)
-{
-    panic("muxclose");
 }
 ulong
 µs(void)
@@ -142,11 +107,6 @@ kickpager(void)
 {
     panic("kickpager");
 }
-void
-closeegrp(Egrp*)
-{
-    panic("closeegrp");
-}
 
 void
 kprocchild(Proc *p, void (*entry)(void))
@@ -160,48 +120,8 @@ dupswap(Page*)
 {
     panic("dupswap");
 }
-Chan*
-mntattach(Chan*, Chan*, char*, int)
-{
-    panic("mntattach");
-}
-Egrp*
-newegrp(void)
-{
-    panic("newegrp");
-}
-void
-envcpy(Egrp*, Egrp*)
-{
-    panic("envcpy");
-}
-void
-forkchild(Proc*, Ureg*)
-{
-    panic("forkchild");
-}
-uintptr
-execregs(uintptr, int, char**, Tos*)
-{
-    panic("execregs");
-}
-void
-fpunotify(Proc*)
-{
-    panic("fpunotify");
-}
-void
-fpunoted(Proc*)
-{
-    panic("fpunoted");
-}
-void
-bootlinks(void)
-{
-	/*
-	 * No bootdir section in the CONF file yet, so no boot filesystem to register.
-	 */
-}
+
+
 void	(*proctrace)(Proc*, int, vlong);    /* Delete this when 'proc' is added to the CONF file */
 int
 uartgetc(void)
@@ -215,8 +135,20 @@ callwithureg(void(*)(Ureg*))
 }
 
 
-
-
-
+FPsave*
+notefpsave(Proc*)
+{
+	return nil;		/* no FP state carried across notes yet */
+}
+void
+fpunotify(Proc *p)
+{
+    p->fpstate |= FPnotify;
+}
+void
+fpunoted(Proc *p)
+{
+    p->fpstate &= ~FPnotify;
+}
 
 
