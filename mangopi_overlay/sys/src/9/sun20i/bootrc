@@ -1,0 +1,11 @@
+#!/bin/rc -m /boot/rcmain
+echo 'sun20i: riscv64 userland alive'
+echo
+echo '/env/cputype'; cat /env/cputype; echo
+echo
+echo '--- / ---';     ls /
+echo '--- /boot ---'; ls /boot
+echo '--- /env ---';  ls /env
+echo '--- /dev ---';  ls /dev
+echo
+exit done

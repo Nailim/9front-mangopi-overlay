@@ -14,4 +14,9 @@ port
 
 bootdir
 	boot
-
+	/$objtype/bin/rc
+	/$objtype/bin/echo
+	/$objtype/bin/cat
+	/$objtype/bin/ls
+	/rc/lib/rcmain
+	bootrc
