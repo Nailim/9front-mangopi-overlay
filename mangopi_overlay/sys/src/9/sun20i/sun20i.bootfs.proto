@@ -1,0 +1,18 @@
+$objtype
+	bin
+		rc
+		echo
+		cat
+		ls
+		mkdir
+		rm
+		ps
+		xd
+		ramfs
+		paqfs
+rc
+	lib
+		rcmain
+	bin
+		bootrc 555 sys sys ./bootrc
+tmp

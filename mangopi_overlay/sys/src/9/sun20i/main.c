@@ -18,7 +18,6 @@ void trapinit(void);
 // Defines to get port included and compiled
 Conf	conf;
 Image*	swapimage;
-Uart*	consuart;
 
 
 #define UART_LSR_THRE	(1<<5)
@@ -74,23 +73,6 @@ delay(int ms)
 }
 
 
-
-/* Actual kernel functions - todo remove commnet later */
-void
-uartputc(int c)
-{
-	uart_putc(c);
-}
-
-void
-uartputs(char *s, int n)
-{
-	while(n-- > 0){
-		if(*s == '\n')
-			uart_putc('\r');
-		uart_putc(*s++);
-	}
-}
 
 void
 confinit(void)
@@ -188,28 +170,30 @@ init0(void)
 	touser((uintptr)sp);
 }
 
-static void
-pstask(void*)
-{
-	Proc *p;
-	int i;
+// static void
+// pstask(void*)
+// {
+// 	Proc *p;
+// 	int i;
 
-	for(;;){
-		tsleep(&up->sleep, return0, nil, 2000);
-		for(i = 0; (p = proctab(i)) != nil; i++){
-			if(p->state == Dead)
-				continue;
-			print("ps: %lud %s %s %s\n", p->pid, p->text,
-				statename[p->state], p->psstate != nil? p->psstate: "");
-		}
-		print("ps: ---\n");
-	}
-}
+// 	for(;;){
+// 		tsleep(&up->sleep, return0, nil, 10000);
+// 		for(i = 0; (p = proctab(i)) != nil; i++){
+// 			if(p->state == Dead)
+// 				continue;
+// 			print("ps: %lud %s %s %s\n", p->pid, p->text,
+// 				statename[p->state], p->psstate != nil? p->psstate: "");
+// 		}
+// 		print("ps: ---\n");
+// 	}
+// }
 
 
 void main(void)
 {
 	active.machs[m->machno] = 1;
+
+	uartconsinit();
 
 	uart_puts("9sun20i: Plan9 riscv64 D1 kernel skeleton starting\n");
 
@@ -242,7 +226,7 @@ void main(void)
 
 	userinit();
 
-	kproc("ps", pstask, nil);
+	// kproc("ps", pstask, nil);
 	schedinit();		/* never returns */
 
 

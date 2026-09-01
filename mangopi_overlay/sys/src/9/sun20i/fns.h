@@ -79,8 +79,6 @@ void    procfork(Proc*);
 void    procsetup(Proc *);
 void    procsave(Proc*);
 void    procrestore(Proc*);
-void	uartputc(int);
-void	uartputs(char*, int);
 void    dumpstack(void);
 void    exit(int);
 void	rebootcmd(int, char**);
@@ -118,10 +116,11 @@ void	fpunotify(Proc*);
 void	fpunoted(Proc*);
 void	bootlinks(void);
 void	links(void);
-int		uartgetc(void);
 void	callwithureg(void(*)(Ureg*));
 void    touser(uintptr);
 
 void    syscall(Ureg*);
 void    setregisters(Ureg*, char*, char*, int);
+void    uartconsinit(void);
+void    uartpoll(void);
 

@@ -8,15 +8,16 @@ dev
 	srv
 	shr
 	dup
+	uart
 
 port
 	int cpuserver = 0;
 
+misc
+	uartsun20i
+
 bootdir
 	boot
-	/$objtype/bin/rc
-	/$objtype/bin/echo
-	/$objtype/bin/cat
-	/$objtype/bin/ls
-	/rc/lib/rcmain
-	bootrc
+	/$objtype/bin/paqfs
+	$CONF.bootfs.paq	bootfs.paq
+

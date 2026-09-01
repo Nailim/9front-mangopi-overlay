@@ -1,11 +1,3 @@
-#!/bin/rc -m /boot/rcmain
-echo 'sun20i: riscv64 userland alive'
-echo
-echo '/env/cputype'; cat /env/cputype; echo
-echo
-echo '--- / ---';     ls /
-echo '--- /boot ---'; ls /boot
-echo '--- /env ---';  ls /env
-echo '--- /dev ---';  ls /dev
-echo
-exit done
+#!/bin/rc
+ramfs -m /tmp
+exec /bin/rc -i <'#t/eia0' >'#t/eia0' >[2]'#t/eia0'

@@ -123,11 +123,7 @@ dupswap(Page*)
 
 
 void	(*proctrace)(Proc*, int, vlong);    /* Delete this when 'proc' is added to the CONF file */
-int
-uartgetc(void)
-{
-    panic("uartgetc");
-}
+
 void
 callwithureg(void(*)(Ureg*))
 {
