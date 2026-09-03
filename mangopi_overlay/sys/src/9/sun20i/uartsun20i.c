@@ -126,8 +126,6 @@ uartpoll(void)
 	ct = uctlr;
 	while(ct->r[LSR] & LSR_DR){
 		ch = ct->r[RBR];
-		if(ch == '\r')			/* TODO: remove later - kbdfs's job */
-			ch = '\n';
 		uartrecv(suart, ch);
 	}
 }

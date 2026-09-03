@@ -1,3 +1,4 @@
 #!/bin/rc
 ramfs -m /tmp
-exec /bin/rc -i <'#t/eia0' >'#t/eia0' >[2]'#t/eia0'
+aux/kbdfs '#t/eia0' >'#t/eia0'
+exec /bin/rc -i </dev/cons >/dev/cons >[2]/dev/cons

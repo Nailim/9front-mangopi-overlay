@@ -1,5 +1,7 @@
 $objtype
 	bin
+		aux
+			kbdfs
 		rc
 		echo
 		cat
