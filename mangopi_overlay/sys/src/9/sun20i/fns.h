@@ -1,6 +1,6 @@
 #include "../port/portfns.h"
 
-#define	cycles(ip)	(*(ip) = rdtime())
+#define	cycles(ip)	(*(ip) = rdcycle())
 
 #define	userureg(ur)	(((ur)->status & SSTATUS_SPP) == 0)
 
@@ -60,6 +60,9 @@ void	wdt_main_feed(void);
 void	wdt_riscv_enable(unsigned int);
 void	wdt_riscv_disable(void);
 void	wdt_riscv_feed(void);
+
+/* ccu.c */
+void cpuclockinit(int);
 
 /* things called from port*/
 #define	getpgcolor(a)	0
@@ -123,4 +126,5 @@ void    syscall(Ureg*);
 void    setregisters(Ureg*, char*, char*, int);
 void    uartconsinit(void);
 void    uartpoll(void);
-
+ uintptr rdcycle(void);
+ 

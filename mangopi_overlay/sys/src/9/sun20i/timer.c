@@ -42,6 +42,31 @@ struct Timerregs
 	ulong	cur1;
 };
 
+
+/*
+ * Measure the cycle counter against the 24MHz timebase rather than trusting a constant.
+ */
+static void
+cyclefreqinit(void)
+{
+	uvlong tstart, tend, c0, c1;
+
+	tstart = rdtime();
+	do {
+		c0 = rdcycle();
+	} while(rdtime() == tstart);	/* align to a timebase tick */
+
+	tend = tstart + TIMEBASEFREQ/100;	/* 10ms */
+	do {
+		c1 = rdcycle();
+	} while(rdtime() < tend);
+
+	m->cyclefreq = (c1 - c0) * 100;
+	m->cpuhz = m->cyclefreq;
+	m->cpumhz = (m->cyclefreq + 500000) / 1000000;
+}
+
+
 void
 timer0init(ulong ticks)
 {
@@ -51,7 +76,7 @@ timer0init(ulong ticks)
 	tr->ctl0 = ModeContinuous|Div1|SrcHosc|Reload|Enable;
 	tr->irqen |= Timer0Irq;
 
-	m->cyclefreq = TIMEBASEFREQ;	/* what cycles() counts in - exported via Tos */
+	cyclefreqinit();
 
     plicenable(TIMER0IRQ, 1);
 }

@@ -47,6 +47,7 @@ OBJ=\
 	timer.$O\
 	plic.$O\
 	wdt.$O\
+	ccu.$O\
 	stub.$O\
 	$CONF.root.$O\
 	$CONF.rootc.$O\

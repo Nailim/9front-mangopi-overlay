@@ -20,6 +20,8 @@
 
 #define CSR_SATP 0x180
 
+#define CSR_CYCLE 0xC00
+
 
 #define FENCEI	WORD $0x0000100F	/* fence.i */
 
@@ -362,6 +364,11 @@ TEXT touser(SB), $-8
 
     MOV R8, R2				// user stack pointer (the argument)
     SYS $0x102				// SRET
+
+
+TEXT rdcycle(SB), $0
+    MOVW CSR(CSR_CYCLE), R8
+    RET
 
 
 GLOBL stack(SB), $16384

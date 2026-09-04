@@ -205,6 +205,11 @@ void main(void)
 	uart_puthex64((unsigned long long)m->machno);
 	uart_puts("\n");
 
+	/*
+	 * Min freq. is 288MHz, max is 1008MHz, figure out inbetween
+	*/
+	cpuclockinit(1008);
+
 	trapinit();
 
 	confinit();
@@ -225,6 +230,10 @@ void main(void)
 	procinit0();
 
 	userinit();
+
+	print("cpu: %llud Hz (%d MHz)\n", m->cyclefreq, m->cpumhz);
+	print("CCU PLL_CPU   (+0x000): %#.8lux\n", *(ulong*)KADDR(0x02001000));
+	print("CCU CLK_RISCV (+0xd00): %#.8lux\n", *(ulong*)KADDR(0x02001d00));
 
 	// kproc("ps", pstask, nil);
 	schedinit();		/* never returns */
