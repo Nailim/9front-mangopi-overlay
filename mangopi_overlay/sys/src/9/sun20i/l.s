@@ -239,7 +239,7 @@ TEXT rdtime(SB), $0
     RET
 
 
-TEXT intrenable(SB), $0
+TEXT intrinit(SB), $0
     MOVW CSR(CSR_SIE), R8
     MOVW $SIE_SEIE, R9
     OR R9, R8

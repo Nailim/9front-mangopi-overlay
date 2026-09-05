@@ -17,7 +17,7 @@ void uart_puthex64(unsigned long long);
 
 extern void trapvec(void);
 void setstvec(void*);
-void intrenable(void);
+void clockintr(Ureg*, void*);
 
 
 void
@@ -27,37 +27,17 @@ trapinit(void)
 
     plicinit();
 	timer0init(TICKINTERVAL);
-	intrenable();
+	intrenable(TIMER0IRQ, clockintr, nil, 0, "clock");
+	intrinit();
 }
 
 
-static void
-clockintr(Ureg *ureg)
+void
+clockintr(Ureg *ureg, void*)
 {
 	wdt_riscv_feed();		/* the old feed loop went away with schedinit() */
-	uartpoll();				/* handle uart for now */
 	timer0ack();			/* dismiss the hardware */
 	timerintr(ureg, 0);		/* portable clock: m->ticks, timer list, re-arm */
-}
-
-static int
-plicintr(Ureg *ureg)
-{
-	int irq, clock;
-
-	irq = plicclaim();
-	clock = 0;
-	switch(irq){
-	case TIMER0IRQ:
-		clockintr(ureg);
-		clock = 1;
-		break;
-	default:
-		iprint("trap: unhandled PLIC irq %d\n", irq);
-		break;
-	}
-	pliccomplete(irq);
-	return clock;
 }
 
 
@@ -147,7 +127,7 @@ trap(Ureg *ureg)
 	if(cause & ((uintptr)1<<63)){
 		switch(cause & ~((uintptr)1<<63)){
 		case 9:
-			preempted(plicintr(ureg));
+			preempted(plicintr(ureg) == TIMER0IRQ);
 			break;
 		default:
 			uart_puts("trap: unhandled interrupt, code ");

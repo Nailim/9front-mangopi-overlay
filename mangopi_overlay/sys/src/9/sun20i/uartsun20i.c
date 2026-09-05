@@ -2,12 +2,6 @@
  * Allwinner D1 UART: a DesignWare 8250, adapted from cycv/uartcycv.c.
  */
 
- /*
- * TODO: update later when real intrenable() is available:
- * now input is polled from clockintr rather than interrupt-driven -
- * plicintr is still a hardcoded switch on TIMER0IRQ.
- */
-
 #include "u.h"
 #include "../port/lib.h"
 #include "mem.h"
@@ -32,11 +26,15 @@ enum {
 enum {
 	LSR_DR = 1<<0,      /* LSR: data ready */
 	LSR_THRE = 1<<5,    /* LSR: transmit holding empty */
+
+    IER_ERDA = 1<<0,    /* IER: enable received-data-available interrupt */
+    LCR_DLAB = 1<<7,	/* divisor latch access */
 };
 
 typedef struct Ctlr {
 	Lock;
 	ulong *r;
+    int iena;
 } Ctlr;
 
 extern PhysUart sun20iphysuart;
@@ -55,6 +53,18 @@ static Uart suart[1] = {
 		.baud	= 115200,
 	},
 };
+
+static void
+suartintr(Ureg*, void *arg)
+{
+	Uart *uart;
+	Ctlr *c;
+
+	uart = arg;
+	c = uart->regs;
+	while(c->r[LSR] & LSR_DR)
+		uartrecv(uart, c->r[RBR]);
+}
 
 void
 uartconsinit(void)
@@ -107,31 +117,14 @@ suartkick(Uart *uart)
 		if(uart->op >= uart->oe && uartstageoutput(uart) == 0)
 			break;
 		ch = *uart->op++;
-		if(ch == '\n')		/* TODO: remove later - kbdfs's job */
+		if(ch == '\n')		/* do on output what kbfd doesn't - no need to configure per terminal */
 			suartputc(uart, '\r');
 		suartputc(uart, ch);
 	}
 }
 
-/*
- * Called from clockintr. Moves received characters into the Uart's stage ring,
- * devuart's own uartclock() pushes them to the queue.
- */
-void
-uartpoll(void)
-{
-	Ctlr *ct;
-    int ch;
-
-	ct = uctlr;
-	while(ct->r[LSR] & LSR_DR){
-		ch = ct->r[RBR];
-		uartrecv(suart, ch);
-	}
-}
-
 static void
-suartenable(Uart *uart, int)
+suartenable(Uart *uart, int ie)
 {
 	Ctlr *ct;
 
@@ -141,7 +134,14 @@ suartenable(Uart *uart, int)
 		;
 	ct->r[LCR] = 0x03;	/* 8 bits, no parity, 1 stop */
 	ct->r[IIR] = 0x01;	/* FCR: enable FIFOs */
-	ct->r[IER] = 0;		/* no interrupts - we poll */
+	ct->r[IER] = 0;
+	if(ie){
+		if(!ct->iena){
+			intrenable(UART0IRQ, suartintr, uart, 0, uart->name);
+			ct->iena = 1;
+		}
+		ct->r[IER] = IER_ERDA;	/* receive only - no Tx handler exists */
+	}
 	iunlock(ct);
 }
 
@@ -160,11 +160,26 @@ suartbits(Uart *uart, int n)
 	return -1;
 }
 
-/* U-Boot already set rate at 115200*/
+/* U-Boot sets initial rate at 115200*/
 static int
-suartbaud(Uart*, int n)
+suartbaud(Uart *uart, int n)
 {
-    print("uart baud %d\n", n);
+    Ctlr *ct;
+	ulong d;
+
+	if(n <= 0)
+		return -1;
+	d = uart->freq / (16 * n);
+	if(d == 0)
+		return -1;
+	ct = uart->regs;
+	while((ct->r[LSR] & LSR_THRE) == 0)	/* uartctl has already drained */
+		;
+	ct->r[LCR] |= LCR_DLAB;
+	ct->r[RBR] = d & 0xff;			    /* DLL overlays RBR while DLAB is set */
+	ct->r[IER] = (d >> 8) & 0xff;		/* DLM overlays IER */
+	ct->r[LCR] &= ~LCR_DLAB;
+	uart->baud = n;
 	return 0;
 }
 

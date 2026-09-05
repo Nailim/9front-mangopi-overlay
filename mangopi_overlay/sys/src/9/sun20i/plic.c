@@ -24,6 +24,44 @@ struct Plicctl
 	ulong	claim;		/* read = claim, write = complete */
 };
 
+typedef struct Vctl Vctl;
+struct Vctl
+{
+	void	(*f)(Ureg*, void*);
+	void	*a;
+	char	*name;
+};
+
+static Vctl vctl[176];		/* same bound as the priority array */
+
+void
+intrenable(int irq, void (*f)(Ureg*, void*), void *a, int, char *name)
+{
+	if(irq <= 0 || irq >= nelem(vctl))
+		panic("intrenable: irq %d out of range", irq);
+	vctl[irq].f = f;
+	vctl[irq].a = a;
+	vctl[irq].name = name;
+	plicenable(irq, 1);
+}
+
+int
+plicintr(Ureg *ureg)
+{
+	Vctl *v;
+	int irq;
+
+	irq = plicclaim();
+	if(irq > 0 && irq < nelem(vctl) && (v = &vctl[irq])->f != nil)
+		v->f(ureg, v->a);
+	else if(irq != 0)
+		iprint("plic: unhandled irq %d\n", irq);
+	pliccomplete(irq);
+	return irq;
+}
+
+
+
 void
 plicinit(void)
 {

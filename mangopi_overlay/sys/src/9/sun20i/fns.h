@@ -12,7 +12,7 @@
 void	setstvec(void*);
 void	trapvec(void);			/* address taken only */
 void	highstart(void);		/* address taken only */
-void	intrenable(void);
+void	intrinit(void);
 uintptr	rdtime(void);
 void	sfencevma(void);
 int	    tas(void*);
@@ -48,6 +48,8 @@ void	timer0init(ulong);
 void	timer0ack(void);
 
 /* plic.c */
+void	intrenable(int, void (*)(Ureg*, void*), void*, int, char*);
+int	    plicintr(Ureg*);
 void	plicinit(void);
 void	plicenable(int, int);
 int     plicclaim(void);
@@ -125,6 +127,5 @@ void    touser(uintptr);
 void    syscall(Ureg*);
 void    setregisters(Ureg*, char*, char*, int);
 void    uartconsinit(void);
-void    uartpoll(void);
  uintptr rdcycle(void);
  
