@@ -255,3 +255,71 @@ forkchild(Proc *p, Ureg *ureg)
 	cureg->ret = 0;			/* child's fork() returns 0 */
 }
 
+
+Ureg*
+notify(Ureg *ureg, char *msg)
+{
+	Ureg *nureg;
+	uintptr sp;
+
+	sp = ureg->sp;
+	sp -= 256;			/* leave the faulting context for debugging */
+	sp -= sizeof(Ureg);
+
+	if(!okaddr(sp-ERRMAX-4*BY2WD, sizeof(Ureg)+ERRMAX+4*BY2WD, 1)
+	|| ((uintptr)up->notify & 1) != 0
+	|| (sp & 7) != 0)
+		return nil;
+
+	nureg = (Ureg*)sp;
+	memmove(nureg, ureg, sizeof(Ureg));
+
+	sp -= BY2WD+ERRMAX;
+	memmove((char*)sp, msg, ERRMAX);
+
+	sp -= 3*BY2WD;
+	*(uintptr*)(sp+2*BY2WD) = sp+3*BY2WD;	/* msg   -> 8(FP) */
+	*(uintptr*)(sp+1*BY2WD) = (uintptr)nureg;	/* ureg  -> 0(FP) */
+	ureg->arg = (uintptr)nureg;			/* also in R8 */
+	ureg->sp = sp;
+	ureg->pc = (uintptr)up->notify;
+	ureg->r1 = 0;					/* link */
+
+	return nureg;
+}
+
+int
+noted(Ureg *ureg, Ureg *nureg, int arg0)
+{
+	uintptr oureg, sp;
+
+	oureg = (uintptr)nureg;
+	if((oureg & 7) != 0)
+		return -1;
+
+	setregisters(ureg, (char*)ureg, (char*)nureg, sizeof(Ureg));
+
+	switch(arg0){
+	case NCONT:
+	case NRSTR:
+		if(!okaddr(ureg->pc, BY2WD, 0)
+		|| !okaddr(ureg->sp, BY2WD, 0)
+		|| (ureg->pc & 1) != 0 || (ureg->sp & 7) != 0)
+			return -1;
+		break;
+
+	case NSAVE:
+		sp = oureg - 4*BY2WD - ERRMAX;
+		if(!okaddr(ureg->pc, BY2WD, 0)
+		|| !okaddr(sp, 4*BY2WD, 1)
+		|| (ureg->pc & 1) != 0 || (sp & 7) != 0)
+			return -1;
+		ureg->sp = sp;
+		ureg->arg = oureg;
+		((uintptr*)sp)[1] = oureg;
+		((uintptr*)sp)[0] = 0;
+		break;
+	}
+	return 0;
+}
+

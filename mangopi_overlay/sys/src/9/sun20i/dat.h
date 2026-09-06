@@ -85,6 +85,19 @@ struct PMMU
 
 #include "../port/portdat.h"
 
+typedef struct {
+	ulong	port;
+	int	size;
+} Devport;
+
+struct DevConf
+{
+	ulong	intnum;			/* interrupt number */
+	char	*type;			/* card type, malloced */
+	int	nports;			/* Number of ports */
+	Devport	*ports;			/* The ports themselves */
+};
+
 struct Mach
 {
 	int	machno;			/* physical id of processor */

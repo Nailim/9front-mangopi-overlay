@@ -189,6 +189,25 @@ init0(void)
 // }
 
 
+static void
+smhcprobe(void)
+{
+	ulong *r;
+
+	print("ccu: peri1x %lud Hz\n", peri1xfreq());
+
+	mmc0enable();			/* deassert reset, AHB clock on */
+	r = KADDR(PHYSMMC0);
+	r[0x00/4] = 0x7;		/* gctrl: soft|fifo|dma reset */
+	coherence();
+	delay(1);
+	mmc0clock(400000);		/* identification speed */
+
+	print("smhc: gctrl %#.8lux clkcr %#.8lux status %#.8lux rint %#.8lux\n",
+		r[0x00/4], r[0x04/4], r[0x3c/4], r[0x38/4]);
+}
+
+
 void main(void)
 {
 	active.machs[m->machno] = 1;
@@ -217,6 +236,8 @@ void main(void)
 	xinit();
 
 	printinit();
+
+	smhcprobe();	// temporary printout
 
 	quotefmtinstall();
 

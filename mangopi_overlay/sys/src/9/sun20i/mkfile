@@ -61,6 +61,10 @@ LIB=\
 
 $p$CONF:D:	$OBJ $CONF.$O $LIB
 	$LD $DFLAGS -s -H 1 -T $KTZERO -E _start -l -o $target $prereq
+#	$LD $DFLAGS -H 1 -T $KTZERO -E _start -l -o $target $prereq
+
+9sun20i.sym:D:	$OBJ $CONF.$O $LIB
+	$LD $DFLAGS -H 2 -T $KTZERO -E _start -l -o $target $prereq
 
 <../boot/bootmkfile
 <../port/portmkfile

@@ -134,6 +134,7 @@ mmubootstrap(void)
 	mapblock((uintptr)KADDR(PHYSDRAM), PHYSDRAM, DRAMMAX, PTELEAFMEM);	/* kernel text/data/bss/stack/tables */
 	maphigh(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);	/* PIO, CCU, timer, wdt, UARTs, i2c, ... */
 	maphigh(PHYSWDTRISCV, BY2PG, PTELEAFDEV);	/* riscv watchdog */
+	maphigh(PHYSMMC0, BY2PG, PTELEAFDEV);		/* SD card slot */
 	maphigh(PHYSPLIC, BY2PG, PTELEAFDEV);		/* PLIC priority */
 	maphigh(PHYSPLICEN, BY2PG, PTELEAFDEV);     /* PLIC enable, context 1 */
 	maphigh(PHYSPLICCTL, BY2PG, PTELEAFDEV);	/* PLIC threshold/claim, context 1 */
@@ -142,6 +143,7 @@ mmubootstrap(void)
 	mapblock(PHYSDRAM, PHYSDRAM, DRAMMAX, PTELEAFMEM);
 	mapident(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);
 	mapident(PHYSWDTRISCV, BY2PG, PTELEAFDEV);
+	mapident(PHYSMMC0, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLIC, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLICEN, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLICCTL, BY2PG, PTELEAFDEV);

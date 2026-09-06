@@ -14,6 +14,7 @@
 #define	PHYSTIMER	0x02050000	    /* within PHYSPIO */
 #define	PHYSUART0	0x02500000	    /* within PHYSPIO */
 #define	PHYSWDTMAIN	0x020500a0	    /* within PHYSPIO */
+#define	PHYSMMC0	0x04020000	    /* SD card slot */
 #define	PHYSWDTRISCV	0x06011000	/* the C906's own watchdog - separate */
 
 /*
@@ -32,6 +33,7 @@
 #define	PHYSPLICCTL	(PHYSPLIC + 0x200000 + 0x1000*PLICCONTEXT)
 
 #define UART0IRQ    18
+#define	MMC0IRQ		56
 #define	TIMER0IRQ	75
 
 #define	PHYSCCU		0x02001000	    /* within PHYSPIO */

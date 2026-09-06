@@ -2,6 +2,8 @@ $objtype
 	bin
 		aux
 			kbdfs
+		bind
+		dd
 		rc
 		echo
 		cat
@@ -12,6 +14,9 @@ $objtype
 		xd
 		ramfs
 		paqfs
+		mount
+		unmount
+		test
 rc
 	lib
 		rcmain

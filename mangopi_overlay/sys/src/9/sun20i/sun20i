@@ -9,12 +9,17 @@ dev
 	shr
 	dup
 	uart
+	sd
 
 port
 	int cpuserver = 0;
 
+link
+	smhc
+
 misc
 	uartsun20i
+	sdmmc	smhc
 
 bootdir
 	boot

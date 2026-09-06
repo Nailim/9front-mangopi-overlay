@@ -36,6 +36,7 @@ void	uarthigh(void);
 /* trap.c */
 void	trapinit(void);
 void	trap(Ureg*);
+Ureg*   notify(Ureg*, char*);
 
 /* mmu.c */
 uintptr	mmubootstrap(void);
@@ -64,7 +65,10 @@ void	wdt_riscv_disable(void);
 void	wdt_riscv_feed(void);
 
 /* ccu.c */
-void cpuclockinit(int);
+void    cpuclockinit(int);
+void	mmc0enable(void);
+void	mmc0clock(int);
+ulong	peri1xfreq(void);
 
 /* things called from port*/
 #define	getpgcolor(a)	0
@@ -127,5 +131,8 @@ void    touser(uintptr);
 void    syscall(Ureg*);
 void    setregisters(Ureg*, char*, char*, int);
 void    uartconsinit(void);
- uintptr rdcycle(void);
- 
+uintptr rdcycle(void);
+
+void    smhclink(void);
+
+
