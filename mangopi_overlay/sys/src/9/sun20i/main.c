@@ -250,6 +250,8 @@ void main(void)
 
 	procinit0();
 
+	fpuinit();
+
 	userinit();
 
 	print("cpu: %llud Hz (%d MHz)\n", m->cyclefreq, m->cpumhz);
@@ -258,13 +260,6 @@ void main(void)
 
 	// kproc("ps", pstask, nil);
 	schedinit();		/* never returns */
-
-
-	while(1){
-		wdt_riscv_feed();
-		print("main ticks %lud\n", m->ticks);
-		delay(1000);
-	}
 }
 
 

@@ -135,4 +135,7 @@ uintptr rdcycle(void);
 
 void    smhclink(void);
 
-
+void	fpuinit(void);
+void	fpsave(FPsave*);
+void	fprestore(FPsave*);
+void	fpsetfs(ulong);

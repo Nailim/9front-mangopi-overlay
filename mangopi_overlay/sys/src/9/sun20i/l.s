@@ -2,6 +2,7 @@
 
 #define UREGSIZE 296	/* sizeof(Ureg): 37 fields * 8 bytes, see /riscv64/include/ureg.h */
 
+#define CSR_FCSR    0x003
 #define CSR_SSTATUS 0x100
 #define CSR_SIE     0x104
 #define CSR_STVEC   0x105
@@ -24,6 +25,12 @@
 
 
 #define FENCEI	WORD $0x0000100F	/* fence.i */
+
+
+#define CSR_SCOUNTEREN  0x106
+
+#define SCOUNTEREN_CY   (1<<0)	/* U-mode may read the cycle counter */
+#define SCOUNTEREN_TM   (1<<1)	/* ... and time */
 
 
 /*
@@ -79,6 +86,9 @@ TEXT highstart(SB), $-8
     MOV $SSTATUS_SUM, R9
     OR R9, R8
     MOVW R8, CSR(CSR_SSTATUS)
+
+    MOV $(SCOUNTEREN_CY|SCOUNTEREN_TM), R8
+    MOVW R8, CSR(CSR_SCOUNTEREN)
 
     MOVW R0, CSR(CSR_SSCRATCH)	// in-kernel invariant - the boot chain may leave junk here
 
@@ -351,8 +361,14 @@ TEXT fencei(SB), $0
 
 
 TEXT touser(SB), $-8
-    MOV $SSTATUS_SPP, R9
-    CSRRC CSR(CSR_SSTATUS), R9, R0	// SPP = 0: SRET lands in U-mode
+    MOVW CSR(CSR_SSTATUS), R9
+    MOV $(SSTATUS_SPP|SSTATUS_FS), R10
+    XOR $-1, R10
+    AND R10, R9                     // SPP = 0: SRET lands in U-mode; FS cleared
+    MOV $SSTATUS_FS_CLEAN, R10
+    OR R10, R9                      // FS = Clean: user may execute FP
+    MOVW R9, CSR(CSR_SSTATUS)
+
     MOV $SSTATUS_SPIE, R9
     CSRRS CSR(CSR_SSTATUS), R9, R0	// SPIE = 1: interrupts on after SRET
 
@@ -366,8 +382,92 @@ TEXT touser(SB), $-8
     SYS $0x102				// SRET
 
 
-TEXT rdcycle(SB), $0
+TEXT rdcycle(SB), $-8
     MOVW CSR(CSR_CYCLE), R8
+    RET
+
+
+TEXT fpsave(SB), $0
+    MOVD F0, 0(R8)
+    MOVD F1, 8(R8)
+    MOVD F2, 16(R8)
+    MOVD F3, 24(R8)
+    MOVD F4, 32(R8)
+    MOVD F5, 40(R8)
+    MOVD F6, 48(R8)
+    MOVD F7, 56(R8)
+    MOVD F8, 64(R8)
+    MOVD F9, 72(R8)
+    MOVD F10, 80(R8)
+    MOVD F11, 88(R8)
+    MOVD F12, 96(R8)
+    MOVD F13, 104(R8)
+    MOVD F14, 112(R8)
+    MOVD F15, 120(R8)
+    MOVD F16, 128(R8)
+    MOVD F17, 136(R8)
+    MOVD F18, 144(R8)
+    MOVD F19, 152(R8)
+    MOVD F20, 160(R8)
+    MOVD F21, 168(R8)
+    MOVD F22, 176(R8)
+    MOVD F23, 184(R8)
+    MOVD F24, 192(R8)
+    MOVD F25, 200(R8)
+    MOVD F26, 208(R8)
+    MOVD F27, 216(R8)
+    MOVD F28, 224(R8)
+    MOVD F29, 232(R8)
+    MOVD F30, 240(R8)
+    MOVD F31, 248(R8)
+    MOVW CSR(CSR_FCSR), R9
+    MOVW R9, 256(R8)
+    RET
+
+TEXT fprestore(SB), $-8
+    MOVW 256(R8), R9
+    MOVW R9, CSR(CSR_FCSR)
+    MOVD 0(R8), F0
+    MOVD 8(R8), F1
+    MOVD 16(R8), F2
+    MOVD 24(R8), F3
+    MOVD 32(R8), F4
+    MOVD 40(R8), F5
+    MOVD 48(R8), F6
+    MOVD 56(R8), F7
+    MOVD 64(R8), F8
+    MOVD 72(R8), F9
+    MOVD 80(R8), F10
+    MOVD 88(R8), F11
+    MOVD 96(R8), F12
+    MOVD 104(R8), F13
+    MOVD 112(R8), F14
+    MOVD 120(R8), F15
+    MOVD 128(R8), F16
+    MOVD 136(R8), F17
+    MOVD 144(R8), F18
+    MOVD 152(R8), F19
+    MOVD 160(R8), F20
+    MOVD 168(R8), F21
+    MOVD 176(R8), F22
+    MOVD 184(R8), F23
+    MOVD 192(R8), F24
+    MOVD 200(R8), F25
+    MOVD 208(R8), F26
+    MOVD 216(R8), F27
+    MOVD 224(R8), F28
+    MOVD 232(R8), F29
+    MOVD 240(R8), F30
+    MOVD 248(R8), F31
+    RET
+
+TEXT fpsetfs(SB), $-8
+    MOVW CSR(CSR_SSTATUS), R9
+    MOV $SSTATUS_FS, R10
+    XOR $-1, R10                /* ~SSTATUS_FS */
+    AND R10, R9
+    OR R8, R9
+    MOVW R9, CSR(CSR_SSTATUS)
     RET
 
 

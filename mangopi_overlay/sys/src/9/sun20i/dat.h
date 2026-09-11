@@ -24,8 +24,7 @@ struct Label
 };
 
 /*
- * rv64imafdc - F and D extensions present, so 32 double-precision registers plus fcsr.
- * Nothing saves/restores these yet; TODO for latr.
+ * This structure must agree with fpsave and fprestore asm routines
  */
 struct FPsave
 {

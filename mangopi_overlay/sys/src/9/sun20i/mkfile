@@ -48,6 +48,7 @@ OBJ=\
 	plic.$O\
 	wdt.$O\
 	ccu.$O\
+	fpu.$O\
 	stub.$O\
 	$CONF.root.$O\
 	$CONF.rootc.$O\

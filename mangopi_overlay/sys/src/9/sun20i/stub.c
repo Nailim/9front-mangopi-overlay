@@ -35,23 +35,7 @@ procfork(Proc*)
 {
     /* replace later */
 }
-void
-procsetup(Proc* p)
-{
-    p->fpstate = FPinit;    // update later
-}
 
-/* ../port/proc.c */
-void
-procsave(Proc*)
-{
-    /* no FP state in use - replace later */
-}
-void
-procrestore(Proc*)
-{
-    /* nothing touches F/D registers yet - replace later */
-}
 
 /* kernel */
 void
@@ -130,21 +114,5 @@ callwithureg(void(*)(Ureg*))
     panic("callwithureg");
 }
 
-
-FPsave*
-notefpsave(Proc*)
-{
-	return nil;		/* no FP state carried across notes yet */
-}
-void
-fpunotify(Proc *p)
-{
-    p->fpstate |= FPnotify;
-}
-void
-fpunoted(Proc *p)
-{
-    p->fpstate &= ~FPnotify;
-}
 
 

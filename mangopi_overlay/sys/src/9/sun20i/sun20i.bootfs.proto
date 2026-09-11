@@ -17,6 +17,17 @@ $objtype
 		mount
 		unmount
 		test
+		time
+#		atomtest
+#		atomictest
+#		cyclestest
+#		memmicrobenchmark
+#		memmicrobenchmark2
+#		memmicrobenchmark3
+#		compilertest1
+#		compilertest2
+#		compilertest3
+#		compilertest4
 rc
 	lib
 		rcmain

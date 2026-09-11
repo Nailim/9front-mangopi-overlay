@@ -127,3 +127,9 @@
 
 #define	SSTATUS_SPIE	(1<<5)
 #define	UENTRY		(UTZERO+32)	/* a.out header is 32 bytes; INITTEXT = 4128 */
+
+#define	SSTATUS_FS	  (3<<13)	/* FPU state */
+#define	SSTATUS_FS_OFF	  (0<<13)
+#define	SSTATUS_FS_INIT	  (1<<13)
+#define	SSTATUS_FS_CLEAN  (2<<13)
+#define	SSTATUS_FS_DIRTY  (3<<13)
