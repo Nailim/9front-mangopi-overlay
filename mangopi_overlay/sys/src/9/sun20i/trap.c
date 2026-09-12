@@ -71,28 +71,41 @@ faultriscv(Ureg *ureg, int read)
 }
 
 
+static char *excname[16] = {
+[0]	"sys: trap: instruction address misaligned",
+[1]	"sys: trap: instruction access fault",
+[2]	"sys: trap: illegal instruction",
+[3]	"sys: breakpoint",
+[4]	"sys: trap: load address misaligned",
+[5]	"sys: trap: load access fault",
+[6]	"sys: trap: store/AMO address misaligned",
+[7]	"sys: trap: store/AMO access fault",
+[8]	"sys: trap: environment call from U-mode",
+[9]	"sys: trap: environment call from S-mode",
+[12]	"sys: trap: instruction page fault",
+[13]	"sys: trap: load page fault",
+[15]	"sys: trap: store/AMO page fault",
+};
+
+static char*
+excstr(uintptr cause)
+{
+	char *s;
+
+	if(cause < nelem(excname) && (s = excname[cause]) != nil)
+		return s;
+	return "sys: trap: unknown";
+}
+
+
+
 static void
 dumptrap(Ureg *ureg, uintptr cause)
 {
 	uart_puts("trap: exception, cause ");
 	uart_puthex64(cause);
 	uart_puts(" (");
-	switch(cause){
-	case 0:	uart_puts("instruction address misaligned"); break;
-	case 1:	uart_puts("instruction access fault"); break;
-	case 2:	uart_puts("illegal instruction"); break;
-	case 3:	uart_puts("breakpoint"); break;
-	case 4:	uart_puts("load address misaligned"); break;
-	case 5:	uart_puts("load access fault"); break;
-	case 6:	uart_puts("store/AMO address misaligned"); break;
-	case 7:	uart_puts("store/AMO address misaligned"); break;
-	case 8:	uart_puts("environment call from U-mode"); break;
-	case 9:	uart_puts("environment call from S-mode"); break;
-	case 12:	uart_puts("instruction page fault"); break;
-	case 13:	uart_puts("load page fault"); break;
-	case 15:	uart_puts("store/AMO page fault"); break;
-	default:	uart_puts("unknown"); break;
-	}
+	uart_puts(excstr(cause));
 	uart_puts(")\n");
 
 	uart_puts("  sepc    = "); uart_puthex64(ureg->pc); uart_puts("\n");
@@ -109,6 +122,7 @@ trap(Ureg *ureg)
 {
 	uintptr cause;
 	int user;
+	char buf[ERRMAX];
 
 	cause = ureg->cause;
 
@@ -145,7 +159,13 @@ trap(Ureg *ureg)
 			faultriscv(ureg, 0);
 			break;
 		default:
-			dumptrap(ureg, cause);
+			if(user && up != nil){
+				snprint(buf, sizeof buf, "%s pc=%#p tval=%#p",
+					excstr(cause), ureg->pc, ureg->tval);
+				postnote(up, 1, buf, NDebug);
+				break;
+			}
+			dumptrap(ureg, cause);	/* kernel bug; never returns */
 		}
 	}
 
