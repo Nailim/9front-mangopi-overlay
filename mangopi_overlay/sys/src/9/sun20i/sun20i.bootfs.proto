@@ -3,6 +3,9 @@ $objtype
 		aux
 			kbdfs
 		bind
+		cp
+		cmp
+		sort
 		dd
 		rc
 		echo
