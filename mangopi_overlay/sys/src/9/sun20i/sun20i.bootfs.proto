@@ -18,10 +18,9 @@ $objtype
 		unmount
 		test
 		time
-#		cyclestest
-#		memmicrobenchmark
-#		memmicrobenchmark2
-#		memmicrobenchmark3
+		sleep
+		pwd
+		prof
 rc
 	lib
 		rcmain
