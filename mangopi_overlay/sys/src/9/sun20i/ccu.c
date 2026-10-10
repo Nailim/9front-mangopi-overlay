@@ -40,6 +40,17 @@ enum {
 	MmcSrcPeri1x	= 1,
 	MmcPostdiv	= 2,		/* fixed /2 after M and P */
 
+	Usb1Clk		= 0xa74/4,	/* OHCI1 source gate + PHY1 reset */
+	UsbBusClkGate	= 0xa8c/4,	/* ehci/ohci/otg gates and resets */
+
+	GateOhci1	= 1<<1,		/* clk_d1.c: CLK_BUS_OHCI1 */
+	GateEhci1	= 1<<5,		/* CLK_BUS_EHCI1 */
+	ResetOhci1	= 1<<17,	/* RST_BUS_OHCI1, 1 = released */
+	ResetEhci1	= 1<<21,	/* RST_BUS_EHCI1 */
+
+	GateUsbOhci1	= 1<<31,	/* CLK_USB_OHCI1, in Usb1Clk */
+	ResetUsbPhy1	= 1<<30,	/* RST_USB_PHY1, in Usb1Clk */
+
 	Hoscfreq	= 24*1000*1000,
 };
 
@@ -165,6 +176,38 @@ mmc0clock(int hz)
 	ccu[Mmc0Clk] = v;			/* gate off while changing */
 	coherence();
 	ccu[Mmc0Clk] = v | MmcClkGate;
+	coherence();
+	microdelay(10);
+}
+
+/*
+ * USB1.  The EHCI and OHCI halves share a clock tree and a PHY, so the
+ * OHCI gates go on even though 9front has no OHCI driver - the EHCI
+ * block does not leave reset without them.  Same gate/reset-in-one-
+ * register arrangement as mmc0, and the reset bit is again released by
+ * writing 1.
+ */
+void
+usb1enable(void)
+{
+	ulong *ccu;
+
+	ccu = KADDR(Ccu);
+
+	ccu[Usb1Clk] |= GateUsbOhci1;		/* OHCI source clock */
+	coherence();
+	ccu[Usb1Clk] &= ~ResetUsbPhy1;		/* PHY1 into reset */
+	coherence();
+	microdelay(10);
+	ccu[Usb1Clk] |= ResetUsbPhy1;		/* and out */
+	coherence();
+
+	ccu[UsbBusClkGate] &= ~(ResetEhci1|ResetOhci1);
+	coherence();
+	microdelay(10);
+	ccu[UsbBusClkGate] |= ResetEhci1|ResetOhci1;
+	coherence();
+	ccu[UsbBusClkGate] |= GateEhci1|GateOhci1;
 	coherence();
 	microdelay(10);
 }

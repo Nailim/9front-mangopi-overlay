@@ -37,3 +37,20 @@
 #define	TIMER0IRQ	75
 
 #define	PHYSCCU		0x02001000	    /* within PHYSPIO */
+
+/*
+ * USB.  The MQ-Pro wires USB1 as the host port (dts: ehci1/ohci1
+ * "okay", usb_otg "peripheral"), so USB0 is never a host here and
+ * PHYSEHCI1 is the only block this port drives.
+ *
+ * PHYSUSB0 is recorded but deliberately not mapped.  It covers the OTG
+ * block and the PHYs' shared control register at +0x400; for the D1,
+ * phy-sun4i-usb.c reaches that register only on the PHY0 path, and
+ * PHY1 needs nothing but the two writes in phy1enable().  Map it if
+ * USB0 is ever driven.
+ */
+#define	PHYSUSB0	0x04100000	/* OTG block; PHYs' shared ctl at +0x400 */
+#define	PHYSEHCI1	0x04200000	/* EHCI1; OHCI1 at +0x400, PHY1 pmu at +0x800 */
+
+#define	EHCI1IRQ	49
+#define	OHCI1IRQ	50		    /* 9front has no OHCI driver */

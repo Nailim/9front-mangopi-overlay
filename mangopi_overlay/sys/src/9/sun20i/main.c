@@ -14,7 +14,6 @@ void trapinit(void);
 /* no mmuinit - the MMU switch now happens in l.s before main() */
 
 
-
 // Defines to get port included and compiled
 Conf	conf;
 Image*	swapimage;

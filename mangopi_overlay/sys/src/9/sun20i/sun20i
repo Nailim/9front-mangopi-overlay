@@ -10,12 +10,14 @@ dev
 	dup
 	uart
 	sd
+	usb
 
 port
 	int cpuserver = 0;
 
 link
 	smhc
+	usbehci	usbehcisun20i
 
 misc
 	uartsun20i

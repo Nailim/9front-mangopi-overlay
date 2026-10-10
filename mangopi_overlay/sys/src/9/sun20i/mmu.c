@@ -17,7 +17,7 @@ void uart_puthex64(unsigned long long);
 extern void highstart(void);	/* l.s - first instruction that runs at a high VA */
 
 enum {
-	NTABLES = 24,	/* 19 needed: 1 root + 2 high kernel + 7 high MMIO + 2 identity kernel + 7 identity MMIO */
+	NTABLES = 24,	/* 21 needed: 1 root + 2 high kernel + 8 high MMIO + 2 identity kernel + 8 identity MMIO */
 };
 
 enum {
@@ -135,6 +135,7 @@ mmubootstrap(void)
 	maphigh(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);	/* PIO, CCU, timer, wdt, UARTs, i2c, ... */
 	maphigh(PHYSWDTRISCV, BY2PG, PTELEAFDEV);	/* riscv watchdog */
 	maphigh(PHYSMMC0, BY2PG, PTELEAFDEV);		/* SD card slot */
+	maphigh(PHYSEHCI1, BY2PG, PTELEAFDEV);		/* EHCI1/OHCI1/PHY1 pmu */
 	maphigh(PHYSPLIC, BY2PG, PTELEAFDEV);		/* PLIC priority */
 	maphigh(PHYSPLICEN, BY2PG, PTELEAFDEV);     /* PLIC enable, context 1 */
 	maphigh(PHYSPLICCTL, BY2PG, PTELEAFDEV);	/* PLIC threshold/claim, context 1 */
@@ -144,6 +145,7 @@ mmubootstrap(void)
 	mapident(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);
 	mapident(PHYSWDTRISCV, BY2PG, PTELEAFDEV);
 	mapident(PHYSMMC0, BY2PG, PTELEAFDEV);
+	mapident(PHYSEHCI1, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLIC, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLICEN, BY2PG, PTELEAFDEV);
 	mapident(PHYSPLICCTL, BY2PG, PTELEAFDEV);
@@ -401,4 +403,89 @@ mmuswitch(Proc* p)
 		p->newtlb = 0;
 	}
 	satpset(p->satp);
+}
+
+
+/*
+ * Split the 2MB block leaf covering va into 512 4KB leaves carrying the
+ * same attributes, so pages inside it can be given their own.  Returns
+ * the level-0 table, or nil.  A no-op if it is already split.
+ *
+ * Walks with KADDR() rather than the boot-time helpers above: those
+ * treat PAs as pointers, which only works while identity-mapped.
+ */
+static uintptr*
+splitblock(uintptr *rootab, uintptr va)
+{
+	uintptr *l1, *l0, pte, pa, attr;
+	int x2, x1, i;
+
+	x2 = PTLX(va, 2);
+	if((rootab[x2] & PTEVALID) == 0)
+		return nil;
+	l1 = KADDR(PTEPA(rootab[x2]));
+
+	x1 = PTLX(va, 1);
+	pte = l1[x1];
+	if((pte & PTEVALID) == 0)
+		return nil;
+	if((pte & (PTEREAD|PTEWRITE|PTEEXEC)) == 0)	/* already a table pointer */
+		return KADDR(PTEPA(pte));
+
+	if((l0 = mallocalign(BY2PG, BY2PG, 0, 0)) == nil)
+		return nil;
+	pa = PTEPA(pte);
+	attr = pte & ~PTEPPNMASK;
+	for(i = 0; i < 512; i++)
+		l0[i] = PAPTE(pa + i*BY2PG) | attr;
+	coherence();
+
+	l1[x1] = PAPTE(PADDR(l0)) | PTEPTR;
+	coherence();
+	sfencevma();
+
+	return l0;
+}
+
+/*
+ * Make size bytes at v uncached, for ucalloc().
+ */
+void*
+mmuuncache(void *v, usize size)
+{
+	uintptr va, pa, o, *l0;
+
+	va = (uintptr)v;
+	if(size == 0 || (va|size) & (BY2PG-1))
+		return nil;
+	/* must lie inside a single 2MB block: ucalloc asks 1MB-aligned 1MB */
+	if((va & ~(PGLSZ(1)-1)) != ((va+size-1) & ~(PGLSZ(1)-1)))
+		return nil;
+
+	pa = PADDR(va);
+
+	if((l0 = splitblock(kernelroot(), va)) == nil)
+		return nil;
+	for(o = 0; o < size; o += BY2PG)
+		l0[PTLX(va+o, 0)] &= ~PTE_THEAD_C;
+
+	coherence();
+	sfencevma();
+
+	dcflush(v, size);
+
+	return v;
+}
+
+/*
+ * Clean and invalidate n bytes at v.
+ */
+void
+dcflush(void *v, usize n)
+{
+	uintptr pa, off;
+
+	pa = PADDR((uintptr)v);
+	off = pa & (CACHELINE-1);
+	dcacheciparange(pa - off, ROUND(n + off, CACHELINE));
 }

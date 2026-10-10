@@ -139,3 +139,15 @@ void	fpuinit(void);
 void	fpsave(FPsave*);
 void	fprestore(FPsave*);
 void	fpsetfs(ulong);
+
+void	usb1enable(void);
+
+void*	mmuuncache(void*, usize);
+void	dcflush(void*, usize);
+
+void*	ucalloc(usize);
+void*	ucallocalign(usize size, int align, usize span);
+void	ucfree(void*);
+
+void	synci(void);    // remove later from here and l.s - used to rn privilege check
+void	dcacheciparange(uintptr, usize);

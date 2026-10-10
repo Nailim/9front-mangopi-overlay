@@ -2,8 +2,10 @@
 ramfs -m /tmp
 
 echo -n adm >/dev/hostowner
+
 bind -a '#S' /dev
-bind -a '#p' /proc
+bind -a '#u' /dev
+
 disk/fdisk -p /dev/sdM0/data >/dev/sdM0/ctl
 disk/prep -p /dev/sdM0/plan9 >/dev/sdM0/ctl
 hjfs -f /dev/sdM0/fs

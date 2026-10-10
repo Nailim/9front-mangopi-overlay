@@ -33,6 +33,7 @@ PORT=\
 	sysproc.$O\
 	taslock.$O\
 	tod.$O\
+	ucalloc.$O\
 	xalloc.$O\
 	random.$O\
 	rdb.$O\
@@ -76,3 +77,6 @@ $p$CONF:D:	$OBJ $CONF.$O $LIB
 initcode.out:	init9.$O initcode.$O /$objtype/lib/libc.a
 #	$LD -l -R1 -s -o $target $prereq
 	$LD -l -R1 -o $target $prereq
+
+devusb.$O usbehci.$O usbehcisun20i.$O: ../port/usb.h
+usbehci.$O usbehcisun20i.$O: usbehci.h

@@ -471,5 +471,34 @@ TEXT fpsetfs(SB), $-8
     RET
 
 
+/*
+ * T-HEAD C906 cache maintenance.  Custom-0 opcodes the assembler does
+ * not know, hand-encoded as atom.s does for LR/SC.  Encodings from
+ * u-boot arch/riscv/cpu/thead/cache.c:
+ *	dcache.cipa a0	0x02b5000b	(base 0x02b0000b | rs1<<15)
+ *	sync.i		0x01a0000b
+ */
+#define	DCACHECIPA(rs1)	WORD $(0x02b0000b | ((rs1)<<15))
+#define	SYNCI		WORD $0x01a0000b
+
+TEXT synci(SB), 1, $-4
+	SYNCI
+	RET
+
+/* void dcacheciparange(uintptr pa, usize n) -- pa and n line-aligned */
+TEXT dcacheciparange(SB), 1, $-4
+	MOVWU	n+8(FP), R9
+	BEQ	R9, done
+	ADD	R8, R9, R9		/* end */
+loop:
+	DCACHECIPA(8)
+	ADD	$CACHELINE, R8
+	SLTU	R9, R8, R10
+	BNE	R10, loop
+	SYNCI
+done:
+	RET
+
+
 GLOBL stack(SB), $16384
 GLOBL mach0(SB), $MACHSIZE  // storage for the one Mach struct

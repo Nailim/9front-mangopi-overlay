@@ -8,6 +8,10 @@
 /*
  * Sizes
  */
+#define	KiB		1024u			/* Kibi 0x0000000000000400 */
+#define	MiB		1048576u		/* Mebi 0x0000000000100000 */
+#define	GiB		1073741824u		/* Gibi 0x0000000040000000 */
+
 #define	BI2BY		8			/* bits per byte */
 #define	BY2PG		4096		/* bytes per page */
 #define	BY2WD		8			/* bytes per word */
@@ -44,6 +48,8 @@
 
 
 #define MACHSIZE 8192
+
+#define	CACHELINE	64		/* C906 D-cache line */
 
 /*
  * Set by SBI, make it work now, scale later
@@ -133,3 +139,5 @@
 #define	SSTATUS_FS_INIT	  (1<<13)
 #define	SSTATUS_FS_CLEAN  (2<<13)
 #define	SSTATUS_FS_DIRTY  (3<<13)
+
+#define	PTEPPNMASK	((((1ULL<<44)-1) << PTEPPNSHIFT))	/* PTE bits 53:10 */

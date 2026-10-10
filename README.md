@@ -4,7 +4,7 @@ An attempt to port 9front to RiscV [MangoPi](https://mangopi.org/mqpro) (Allwinn
 
 ## about
 
-About done with phase 10 - all userland compiles.
+Working on phase 8 - USB enumerates a netwrok interface on a hub.
 
 A practical learning project atempting to pring 9front to MangoPi SBC. This is standing on the complimentari project trying to port [riscv compiler to 9front](https://github.com/Nailim/9front-riscv-overlay).
 

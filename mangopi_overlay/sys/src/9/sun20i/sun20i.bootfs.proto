@@ -12,6 +12,8 @@ $objtype
 		cat
 		ls
 		mkdir
+		nusb
+			usbd
 		rm
 		ps
 		xd
