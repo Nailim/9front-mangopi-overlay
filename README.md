@@ -4,7 +4,7 @@ An attempt to port 9front to RiscV [MangoPi](https://mangopi.org/mqpro) (Allwinn
 
 ## about
 
-Working on phase 8 - USB enumerates a netwrok interface on a hub.
+About done with phase 8.
 
 A practical learning project atempting to pring 9front to MangoPi SBC. This is standing on the complimentari project trying to port [riscv compiler to 9front](https://github.com/Nailim/9front-riscv-overlay).
 
@@ -19,9 +19,9 @@ To keep things managable a few phases are planned:
 * phase 5: ~~scheduler - switch "processes" or print from different threads~~
 * phase 6: ~~console driver - issue commands to kernel~~
 * phase 7: ~~storage driver - read FS from SD card -> try to build and use some of the binaries~~
-* phase 8: network driver - something generic LAN on USB (is this a real system now?)
+* phase 8: ~~network driver - something generic LAN on USB (is this a real system now?)~~
 * phase 9: implemen the rest of the "owl" -> some drivers for I2C would be nice, maybe a frame buffer
-* phase 10: ~~more compiler work to get the whole szstem to compile - maz need to to this sonner~~
+* phase 10: ~~more compiler work to get the whole szstem to compile - may need to to this sonner~~
 * phase 11: optimizations and additional work - e.g. interrupt driven DMA storage driver
 
 ## requirements

@@ -26,6 +26,10 @@ $objtype
 		sleep
 		pwd
 		prof
+		ip
+			ipconfig
+			ping
+		networktest1
 rc
 	lib
 		rcmain

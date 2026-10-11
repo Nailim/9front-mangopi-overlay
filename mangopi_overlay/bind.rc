@@ -9,3 +9,4 @@
 
 bind -a  sys/src/9 /sys/src/9
 
+bind -c sys/src/9/boot/nusbrc /sys/src/9/boot/nusbrc

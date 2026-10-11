@@ -57,6 +57,7 @@ OBJ=\
 	$PORT\
 
 LIB=\
+	/$objtype/lib/libip.a\
 	/$objtype/lib/libsec.a\
 	/$objtype/lib/libmp.a\
 	/$objtype/lib/libc.a\
