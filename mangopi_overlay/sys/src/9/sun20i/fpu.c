@@ -28,7 +28,14 @@ fpuinit(void)
 void
 procsetup(Proc *p)
 {
+	int s;
+
 	p->fpstate = FPinit;
+	if(p == up){
+		s = splhi();
+		procrestore(p);		/* live regs belong to the old image */
+		splx(s);
+	}
 }
 
 /*

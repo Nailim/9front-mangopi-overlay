@@ -500,5 +500,21 @@ done:
 	RET
 
 
+/*
+ * A new child never passes through procswitch's procrestore, so it would
+ * run on the previous process's FP registers while fpstate says FPinit.
+ * This entry gives it that state, then joins forkret.  Interrupts are
+ * still off here: sched() runs splhi.  Not part of the trap path, which
+ * falls straight into forkret.
+ */
+TEXT forkretfp(SB), $-8
+    ADD $-16, R2		// callee frame below the Ureg; forkret needs R2 = Ureg
+    MOV R6, R8			// up
+    JAL R1, procrestore(SB)
+    ADD $16, R2
+    MOVW $forkret(SB), R9
+    JMP (R9)
+
+
 GLOBL stack(SB), $16384
 GLOBL mach0(SB), $MACHSIZE  // storage for the one Mach struct

@@ -151,3 +151,5 @@ void	ucfree(void*);
 
 void	synci(void);    // remove later from here and l.s - used to rn privilege check
 void	dcacheciparange(uintptr, usize);
+
+void forkretfp(void);

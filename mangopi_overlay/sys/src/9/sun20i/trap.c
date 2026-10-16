@@ -267,7 +267,7 @@ forkchild(Proc *p, Ureg *ureg)
 {
 	Ureg *cureg;
 
-	p->sched.pc = (uintptr)forkret;
+	p->sched.pc = (uintptr)forkretfp;
 	p->sched.sp = (uintptr)p - sizeof(Ureg);
 
 	cureg = (Ureg*)p->sched.sp;
