@@ -1,0 +1,35 @@
+#!/bin/rc
+# negall   run the deliberate-failure controls (area neg) and check that
+# testall reports each one the way it should.  If a control does NOT fail
+# (or pass, for neg/pass) as expected, testall itself is broken and its
+# green results mean nothing.  Run after any change to testall or test.h.
+
+out=/tmp/negall.$pid
+testlimit=3 /rc/bin/testall neg >$out >[2=1]
+bad=()
+
+fn expect {
+	x=`{sed -n $1'p' $out}
+	if(~ $#x 0){
+		echo NEG FAIL $2: no line matching $1
+		bad=($bad $2)
+	}
+	if not
+		echo NEG ok $2
+}
+
+expect '/^PASS neg\/pass$/' 'correct test passes'
+expect '/^FAIL neg\/stale: stale/' 'wrong build stamp is stale'
+expect '/^FAIL neg\/failline: see FAIL/' 'FAIL line fails'
+expect '/^FAIL neg\/noverdict: no ok verdict/' 'missing verdict fails'
+expect '/^FAIL neg\/refdiff: output differs/' 'output differing from ref fails'
+expect '/^FAIL neg\/hang: hung/' 'hung test is killed'
+expect '/^testall: 1 passed, 5 failed/' 'summary counts'
+
+rm -f $out
+if(~ $#bad 0){
+	echo negall: all controls behaved
+	exit ''
+}
+echo negall: BROKEN: $bad
+exit broken

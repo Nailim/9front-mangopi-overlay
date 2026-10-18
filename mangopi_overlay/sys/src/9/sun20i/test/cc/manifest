@@ -1,0 +1,2 @@
+TESTS=int fp nan cast fpconst assign
+REFS=int fp

@@ -1,0 +1,2 @@
+TESTS=fpswitch fpexec fpmany
+REFS=

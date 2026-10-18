@@ -5,6 +5,7 @@ $objtype
 		bind
 		cp
 		cmp
+		diff
 		sort
 		dd
 		rc
@@ -25,14 +26,19 @@ $objtype
 		time
 		sleep
 		pwd
+		sed
+		seq
 		prof
 		ip
 			ipconfig
 			ping
-		networktest1
 rc
 	lib
 		rcmain
 	bin
 		bootrc 555 sys sys ./bootrc
+		testall 555 sys sys ./test/stage/rc/bin/testall
+		negall 555 sys sys ./test/stage/rc/bin/negall
+	test 775 sys sys ./test/stage/rc/test
+		+ - - - ./test/stage/rc/test
 tmp

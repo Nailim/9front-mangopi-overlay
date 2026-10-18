@@ -1,0 +1,341 @@
+sizes c1 s2 i4 l4 v8 p8 charsigned 1
+char + 5026e91e34d54703
+char - 5d10a1ef5bb178b3
+char * 127013e6adf66c27
+char & d4cc629a5458e4ad
+char | b4ae659409e83369
+char ^ 451facb5e113515f
+char / 11f84e3e1b94d5ed
+char %llux
+char += 5026e91e34d54703
+char -= 5d10a1ef5bb178b3
+char *= 127013e6adf66c27
+char &= d4cc629a5458e4ad
+char |= b4ae659409e83369
+char ^= 451facb5e113515f
+char ++-- 4c86015c0a39f4b5
+char == 9d543c9c463e0c87
+char != 86189f0dc22338d7
+char < 8d5f62b53eb4e52f
+char <= 82939eaa312c442f
+char > a0d93cffd735012f
+char >= 960d78f4c9ac602f
+char << a54fcf616a6cfb71
+char >> 30dfeef3e267bd66
+char->char 712bdd1b5be7d5f4
+char->uchar 6cb73f041dbe0df4
+char->short 712bdd1b5be7d5f4
+char->ushort b72110acb6d3d5f4
+char->int 712bdd1b5be7d5f4
+char->uint a6d7159d5be7d5f4
+char->long 712bdd1b5be7d5f4
+char->ulong a6d7159d5be7d5f4
+char->vlong 712bdd1b5be7d5f4
+char->uvlong 712bdd1b5be7d5f4
+char double 28ec48bed0b22217
+uchar + b5a6eae57e7fed03
+uchar - c7088b78c249ceb3
+uchar * d6f56d36cdc59c27
+uchar & 7401b790164d66ad
+uchar | 7ccc48cdbdcee969
+uchar ^ 56e4eed16a23135f
+uchar / 47c13bf02acd2f5d
+uchar %llux
+uchar += b5a6eae57e7fed03
+uchar -= c7088b78c249ceb3
+uchar *= d6f56d36cdc59c27
+uchar &= 7401b790164d66ad
+uchar |= 7ccc48cdbdcee969
+uchar ^= 56e4eed16a23135f
+uchar ++-- fb36f39fcc8908b5
+uchar == 9d543c9c463e0c87
+uchar != 86189f0dc22338d7
+uchar < a82d767b67028e2f
+uchar <= 9d61b2705979ed2f
+uchar > 860b2939aee7582f
+uchar >= 7b3f652ea15eb72f
+uchar << c19f212fac2a1971
+uchar >> a0786b725d0a7b92
+uchar->char 712bdd1b5be7d5f4
+uchar->uchar 6cb73f041dbe0df4
+uchar->short 6cb73f041dbe0df4
+uchar->ushort 6cb73f041dbe0df4
+uchar->int 6cb73f041dbe0df4
+uchar->uint 6cb73f041dbe0df4
+uchar->long 6cb73f041dbe0df4
+uchar->ulong 6cb73f041dbe0df4
+uchar->vlong 6cb73f041dbe0df4
+uchar->uvlong 6cb73f041dbe0df4
+uchar double d7f2453cd05e4e17
+short + c8d06d60f21e2303
+short - e544f6ea5cea82b3
+short * f68a1a68baf74027
+short & eaa0baa15e7ea6ad
+short | e4ceee04cf917d69
+short ^ 7065a0e88e2d7b5f
+short / 42634cd9dc3d01b7
+short %llux
+short += c8d06d60f21e2303
+short -= e544f6ea5cea82b3
+short *= f68a1a68baf74027
+short &= eaa0baa15e7ea6ad
+short |= e4ceee04cf917d69
+short ^= 7065a0e88e2d7b5f
+short ++-- 2f3ac8ebe91b2eb5
+short == 478befb0b4f40f4f
+short != dbe0ebf9536d360f
+short < f229c01a03885e4b
+short <= 9195af2364b5c013
+short > 91d72c86a3ab854b
+short >= 31431b9004d8e713
+short << 205b7a744a6a2649
+short >> 99be01e74fb81bcd
+short->char 712bdd1b5be7d5f4
+short->uchar 6cb73f041dbe0df4
+short->short 3d1fff90e6089bf4
+short->ushort 1b5c0050b6299bf4
+short->int 3d1fff90e6089bf4
+short->uint 2c973f45e6089bf4
+short->long 3d1fff90e6089bf4
+short->ulong 2c973f45e6089bf4
+short->vlong 3d1fff90e6089bf4
+short->uvlong 3d1fff90e6089bf4
+short double a6cd3e29ecf2b217
+ushort + dc96b74673b92303
+ushort - 89a2b6bbdcb882b3
+ushort * d028a3035d684027
+ushort & e49024f2382da6ad
+ushort | 88b262abeb827d69
+ushort ^ c90cc29c793d7b5f
+ushort / bfa2cdb90540c43c
+ushort %llux
+ushort += dc96b74673b92303
+ushort -= 89a2b6bbdcb882b3
+ushort *= d028a3035d684027
+ushort &= e49024f2382da6ad
+ushort |= 88b262abeb827d69
+ushort ^= c90cc29c793d7b5f
+ushort ++-- 7164696d69ef2eb5
+ushort == 478befb0b4f40f4f
+ushort != dbe0ebf9536d360f
+ushort < c865ae87ef8f464b
+ushort <= 67d19d9150bca813
+ushort > bb9b3e18b7a49d4b
+ushort >= 5b072d2218d1ff13
+ushort << b6ad67df6b822649
+ushort >> f7b6a0491bb7e0a7
+ushort->char 712bdd1b5be7d5f4
+ushort->uchar 6cb73f041dbe0df4
+ushort->short 3d1fff90e6089bf4
+ushort->ushort 1b5c0050b6299bf4
+ushort->int 1b5c0050b6299bf4
+ushort->uint 1b5c0050b6299bf4
+ushort->long 1b5c0050b6299bf4
+ushort->ulong 1b5c0050b6299bf4
+ushort->vlong 1b5c0050b6299bf4
+ushort->uvlong 1b5c0050b6299bf4
+ushort double f457aa243743b217
+int + 53d982a475b82303
+int - 433c57ae381c82b3
+int * 4b8818533dc74027
+int & cc86278a1cdca6ad
+int | 26082e2115657d69
+int ^ 502ca940ac9b7b5f
+int / fa05273025fb34b7
+int %llux
+int += 53d982a475b82303
+int -= 433c57ae381c82b3
+int *= 4b8818533dc74027
+int &= cc86278a1cdca6ad
+int |= 26082e2115657d69
+int ^= 502ca940ac9b7b5f
+int ++-- cd4b34c7a4d92eb5
+int == c2ef92c99687c597
+int != 607d48e071d97fc7
+int < 841ff6b43f6b8da7
+int <= 9eef88d6822ca5b7
+int > 847d52d386349fa7
+int >= 9f4ce4f5c8f5b7b7
+int << 15526937553e5361
+int >> a026dc9eb656eb14
+int->char 712bdd1b5be7d5f4
+int->uchar 6cb73f041dbe0df4
+int->short 3d1fff90e6089bf4
+int->ushort 1b5c0050b6299bf4
+int->int 2b609dab439e9bf4
+int->uint f949a7e3439e9bf4
+int->long 2b609dab439e9bf4
+int->ulong f949a7e3439e9bf4
+int->vlong 2b609dab439e9bf4
+int->uvlong 2b609dab439e9bf4
+int double 3eac2d0a4784b217
+uint + 477b908e75b82303
+uint - 86987d86381c82b3
+uint * 87b559f83dc74027
+uint & fff0c22c1cdca6ad
+uint | 4ff3fac515657d69
+uint ^ 24540bb8ac9b7b5f
+uint / 44fadfffba1edca7
+uint %llux
+uint += 477b908e75b82303
+uint -= 86987d86381c82b3
+uint *= 87b559f83dc74027
+uint &= fff0c22c1cdca6ad
+uint |= 4ff3fac515657d69
+uint ^= 24540bb8ac9b7b5f
+uint ++-- b82c90c5a4d92eb5
+uint == c2ef92c99687c597
+uint != 607d48e071d97fc7
+uint < b6c0e69035d05aa7
+uint <= d19078b2789172b7
+uint > 51dc62f78fcfd2a7
+uint >= 6cabf519d290eab7
+uint << d8cd8feb553e5361
+uint >> 56da4676bed84b74
+uint->char 712bdd1b5be7d5f4
+uint->uchar 6cb73f041dbe0df4
+uint->short 3d1fff90e6089bf4
+uint->ushort 1b5c0050b6299bf4
+uint->int 2b609dab439e9bf4
+uint->uint f949a7e3439e9bf4
+uint->long 2b609dab439e9bf4
+uint->ulong f949a7e3439e9bf4
+uint->vlong f949a7e3439e9bf4
+uint->uvlong f949a7e3439e9bf4
+uint double f8892bf42b24b217
+long + 53d982a475b82303
+long - 433c57ae381c82b3
+long * 4b8818533dc74027
+long & cc86278a1cdca6ad
+long | 26082e2115657d69
+long ^ 502ca940ac9b7b5f
+long / fa05273025fb34b7
+long %llux
+long += 53d982a475b82303
+long -= 433c57ae381c82b3
+long *= 4b8818533dc74027
+long &= cc86278a1cdca6ad
+long |= 26082e2115657d69
+long ^= 502ca940ac9b7b5f
+long ++-- cd4b34c7a4d92eb5
+long == c2ef92c99687c597
+long != 607d48e071d97fc7
+long < 841ff6b43f6b8da7
+long <= 9eef88d6822ca5b7
+long > 847d52d386349fa7
+long >= 9f4ce4f5c8f5b7b7
+long << 15526937553e5361
+long >> a026dc9eb656eb14
+long->char 712bdd1b5be7d5f4
+long->uchar 6cb73f041dbe0df4
+long->short 3d1fff90e6089bf4
+long->ushort 1b5c0050b6299bf4
+long->int 2b609dab439e9bf4
+long->uint f949a7e3439e9bf4
+long->long 2b609dab439e9bf4
+long->ulong f949a7e3439e9bf4
+long->vlong 2b609dab439e9bf4
+long->uvlong 2b609dab439e9bf4
+long double 3eac2d0a4784b217
+ulong + 477b908e75b82303
+ulong - 86987d86381c82b3
+ulong * 87b559f83dc74027
+ulong & fff0c22c1cdca6ad
+ulong | 4ff3fac515657d69
+ulong ^ 24540bb8ac9b7b5f
+ulong / 44fadfffba1edca7
+ulong %llux
+ulong += 477b908e75b82303
+ulong -= 86987d86381c82b3
+ulong *= 87b559f83dc74027
+ulong &= fff0c22c1cdca6ad
+ulong |= 4ff3fac515657d69
+ulong ^= 24540bb8ac9b7b5f
+ulong ++-- b82c90c5a4d92eb5
+ulong == c2ef92c99687c597
+ulong != 607d48e071d97fc7
+ulong < b6c0e69035d05aa7
+ulong <= d19078b2789172b7
+ulong > 51dc62f78fcfd2a7
+ulong >= 6cabf519d290eab7
+ulong << d8cd8feb553e5361
+ulong >> 56da4676bed84b74
+ulong->char 712bdd1b5be7d5f4
+ulong->uchar 6cb73f041dbe0df4
+ulong->short 3d1fff90e6089bf4
+ulong->ushort 1b5c0050b6299bf4
+ulong->int 2b609dab439e9bf4
+ulong->uint f949a7e3439e9bf4
+ulong->long 2b609dab439e9bf4
+ulong->ulong f949a7e3439e9bf4
+ulong->vlong f949a7e3439e9bf4
+ulong->uvlong f949a7e3439e9bf4
+ulong double f8892bf42b24b217
+vlong + 6c93774a75b82303
+vlong - c5b22cea381c82b3
+vlong * f63b64573dc74027
+vlong & 74c5b9da1cdca6ad
+vlong | 24cf588d15657d69
+vlong ^ 204b04daac9b7b5f
+vlong / f6d4da571e17034f
+vlong %llux
+vlong += 6c93774a75b82303
+vlong -= c5b22cea381c82b3
+vlong *= f63b64573dc74027
+vlong &= 74c5b9da1cdca6ad
+vlong |= 24cf588d15657d69
+vlong ^= 204b04daac9b7b5f
+vlong ++-- 634bbca5a4d92eb5
+vlong == 89d028e35fae21f7
+vlong != 999cb2c6a8b32367
+vlong < 8bdd8419fd3cf377
+vlong <= 6d8dac56092467e7
+vlong > b5df2f53ff3cdd77
+vlong >= 978f57900b2451e7
+vlong << 1cf697d70f8129b9
+vlong >> 1668d0ad8a99e3a9
+vlong->char 712bdd1b5be7d5f4
+vlong->uchar 6cb73f041dbe0df4
+vlong->short 3d1fff90e6089bf4
+vlong->ushort 1b5c0050b6299bf4
+vlong->int 2b609dab439e9bf4
+vlong->uint f949a7e3439e9bf4
+vlong->long 2b609dab439e9bf4
+vlong->ulong f949a7e3439e9bf4
+vlong->vlong ba9a59df439e9bf4
+vlong->uvlong ba9a59df439e9bf4
+vlong double d1b2ef7810cb2b0e
+uvlong + 6c93774a75b82303
+uvlong - c5b22cea381c82b3
+uvlong * f63b64573dc74027
+uvlong & 74c5b9da1cdca6ad
+uvlong | 24cf588d15657d69
+uvlong ^ 204b04daac9b7b5f
+uvlong / 2502449d4abd5367
+uvlong %llux
+uvlong += 6c93774a75b82303
+uvlong -= c5b22cea381c82b3
+uvlong *= f63b64573dc74027
+uvlong &= 74c5b9da1cdca6ad
+uvlong |= 24cf588d15657d69
+uvlong ^= 204b04daac9b7b5f
+uvlong ++-- 634bbca5a4d92eb5
+uvlong == 89d028e35fae21f7
+uvlong != 999cb2c6a8b32367
+uvlong < b8076b2cb9760277
+uvlong <= 99b79368c55d76e7
+uvlong > 89b548414303ce77
+uvlong >= 6b65707d4eeb42e7
+uvlong << 1cf697d70f8129b9
+uvlong >> 993871bc9bb080f3
+uvlong->char 712bdd1b5be7d5f4
+uvlong->uchar 6cb73f041dbe0df4
+uvlong->short 3d1fff90e6089bf4
+uvlong->ushort 1b5c0050b6299bf4
+uvlong->int 2b609dab439e9bf4
+uvlong->uint f949a7e3439e9bf4
+uvlong->long 2b609dab439e9bf4
+uvlong->ulong f949a7e3439e9bf4
+uvlong->vlong ba9a59df439e9bf4
+uvlong->uvlong ba9a59df439e9bf4
+uvlong double abe99cbe76f9ce80

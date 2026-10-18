@@ -1,0 +1,15 @@
+AREA=cc
+<manifest
+<../mkarea
+
+# amd64 references: build the same sources with 6c, drop the build line.
+# 6c is not IEEE on NaN, the generators already avoid NaN cells.
+refs:V:
+	for(t in $REFS){
+		6c '-DBUILD=0' -o $t.6 $t.c
+		6l -o 6.$t $t.6
+		if(! ./6.$t >$t.out) exit $t' reference run failed'
+		sed 1d $t.out >../ref/cc-$t.ref
+		rm -f $t.out
+		rm -f $t.6 6.$t
+	}

@@ -1,0 +1,2 @@
+TESTS=mem atomic
+REFS=

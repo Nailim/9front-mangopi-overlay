@@ -1,0 +1,2 @@
+TESTS=pass stale failline noverdict refdiff hang
+REFS=refdiff

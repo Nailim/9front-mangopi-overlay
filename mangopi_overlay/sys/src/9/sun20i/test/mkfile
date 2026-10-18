@@ -1,0 +1,27 @@
+# Regression suite for the sun20i port.   mk tests   builds everything
+# into stage/, which sun20i.bootfs.proto packs into the kernel image.
+#   mk tests    clean rebuild of every test, new STAMP
+#   mk refs     regenerate the amd64 (6c) reference outputs
+#   mk clean
+# Run from this directory on the VM (objtype=riscv64).
+
+AREAS=cc k lc neg
+STAMP=`{date -n}
+
+tests:V: clean
+	mkdir -p stage/rc/bin stage/rc/test
+	echo $STAMP >stage/rc/test/STAMP
+	cp testall stage/rc/bin/testall
+	cp negall stage/rc/bin/negall
+	for(a in $AREAS)
+		if(! @{cd $a; mk all}) exit $a' failed'
+	echo built $STAMP
+
+refs:V:
+	for(a in cc)
+		@{cd $a; mk refs}
+
+clean:V:
+	rm -rf stage
+	for(a in $AREAS)
+		@{cd $a; mk clean}

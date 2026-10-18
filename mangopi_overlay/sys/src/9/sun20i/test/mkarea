@@ -1,0 +1,28 @@
+# Shared rules for a test area.  The area mkfile sets AREA and includes
+# ./manifest (TESTS = binaries to build, REFS = tests with a reference
+# output), then includes this file.  STAMP comes from the top mkfile.
+
+objtype=riscv64
+</$objtype/mkfile
+
+STAGE=../stage/rc/test/$AREA
+
+all:V:
+	mkdir -p $STAGE
+	for(t in $TESTS){
+		if(! mk $O.$t) exit $t' failed'
+		cp $O.$t $STAGE/$t
+	}
+	for(t in $REFS)
+		cp ../ref/$AREA-$t.ref $STAGE/$t.ref
+
+$O.%: %.$O
+	$LD -o $target $prereq
+
+%.$O: %.c ../test.h
+	$CC '-DBUILD='$STAMP $stem.c
+
+clean:V:
+	rm -f *.j *.6 j.* 6.*
+
+nuke:V: clean

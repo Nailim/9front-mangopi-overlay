@@ -1,0 +1,88 @@
+#!/bin/rc
+# testall [area ...]   run the staged regression tests (default: all areas)
+#
+# Needs in the namespace: /rc/test (staged by mk tests), /tmp, and the
+# commands ls sed cmp diff sleep seq.  Prints one PASS/FAIL line per test and
+# a summary; exit status is nil only if everything passed.
+# A test passes when: its first line is "build <stamp>" with the stamp
+# in /rc/test/STAMP (otherwise it is a stale binary), it printed no FAIL
+# line, and either its last line is "ok" or its output after the build
+# line equals <test>.ref.  A test running longer than $limit seconds is
+# killed and fails.  Area neg (deliberate failures, see negall) only runs
+# when named.  testlimit=N in the environment overrides the 300 s.
+
+root=/rc/test
+if(~ $#testlimit 0)
+	testlimit=300
+limit=$testlimit
+if(~ $#* 0)
+	areas=`{ls -p $root | sed '/^STAMP$/d;/^neg$/d'}
+if not
+	areas=$*
+stamp=`{cat $root/STAMP}
+out=/tmp/testall.$pid
+npass=()
+failed=()
+
+for(a in $areas){
+	for(t in `{ls -p $root/$a}){
+		switch($t){
+		case *.ref
+			status=''
+		case *
+			name=$a/$t
+			rm -f $out $out.data $out.diff
+			$root/$a/$t >$out >[2=1] &
+			tp=$apid
+			for(i in `{seq 1 $limit})
+				if(test -d /proc/$tp) sleep 1
+			why=()
+			if(test -d /proc/$tp){
+				echo kill >/proc/$tp/ctl
+				why='hung (killed after '$limit's)'
+			}
+			if(~ $#why 0){
+				first=`{sed -n 1p $out}
+				if(! ~ $"first 'build '$stamp)
+					why='stale: first line is "'$"first'", want "build '$stamp'"'
+			}
+			if(~ $#why 0){
+				fails=`{sed -n '/^FAIL/p' $out}
+				if(! ~ $#fails 0)
+					why='see FAIL lines'
+			}
+			if(~ $#why 0){
+				if(test -f $root/$a/$t.ref){
+					sed 1d $out >$out.data
+					if(! cmp -s $out.data $root/$a/$t.ref){
+						why='output differs from '$t'.ref (diff: < output, > ref)'
+						diff $out.data $root/$a/$t.ref | sed 10q >$out.diff
+					}
+				}
+				if not{
+					last=`{sed -n '$p' $out}
+					if(! ~ $"last ok)
+						why='no ok verdict (last line: '$"last')'
+				}
+			}
+			if(~ $#why 0){
+				echo PASS $name
+				npass=($npass x)
+			}
+			if not{
+				echo FAIL $name: $why
+				if(test -f $out.diff)
+					sed 's/^/	/' $out.diff
+				if not
+					sed 's/^/	/' $out
+				rm -f $out.diff
+				failed=($failed $name)
+			}
+		}
+	}
+}
+rm -f $out $out.data $out.diff
+echo testall: $#npass passed, $#failed failed
+if(~ $#failed 0)
+	exit ''
+exit 'failed: '$"failed

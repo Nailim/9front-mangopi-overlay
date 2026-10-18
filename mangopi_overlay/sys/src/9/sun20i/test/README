@@ -1,0 +1,43 @@
+sun20i regression suite (9a-0)
+==============================
+
+Build (on the VM, in this directory):
+
+	mk tests	clean rebuild of every test, new STAMP, into stage/
+	mk refs		regenerate ref/cc-*.ref with 6c (amd64) - only after
+			changing a generator, then review the diff
+	mk clean
+
+Then rebuild the kernel (stage/ is packed by sun20i.bootfs.proto) and, on
+the board:
+
+	testall [area ...]	areas: cc k lc
+	negall			controls: checks that testall itself fails what it should
+
+Layout
+	neg/	deliberate-failure controls for testall (see negall)
+	cc/	compiler: generated int/fp differential tests (vs 6c refs),
+		nan, cast, fpconst, assign
+	k/	kernel: FP state across switch / fork+exec / many procs
+	lc/	libc: mem* routines, atomics
+	gen/	convgen.py, fpgen.py -> cc/int.c, cc/fp.c (host, regen.sh)
+	ref/	6c outputs for the generated tests
+	stage/	what gets packed (rc/bin/testall, rc/test/STAMP, rc/test/<area>/*)
+
+Protocol: a test prints "build <stamp>" first, "FAIL ..." lines, and "ok"
+last.  Generated tests print data after the build line and are compared with
+<test>.ref instead.  testall fails a test whose build line is not the
+current STAMP (stale binary), that prints FAIL, that has no verdict or
+differs from its ref, or that runs longer than 300 s.
+
+Controls: area neg holds deliberate failures (stale stamp, FAIL line, no
+verdict, ref mismatch, hang).  `testall` skips it; `negall` runs it and
+checks every control was reported correctly.  Run negall after any change
+to testall or test.h.  testlimit=N overrides the 300 s limit.
+
+Adding a test: write area/name.c including "../test.h", add name to TESTS
+in area/manifest (and REFS if it has a reference), mk tests.
+
+What this cannot catch: a stale libc.a or compiler.  The stamp proves the
+test was rebuilt now, not that libc was reinstalled first - run
+`mk install` in /sys/src/libc before `mk tests` after any libc change.
