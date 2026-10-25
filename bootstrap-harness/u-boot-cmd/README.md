@@ -2,6 +2,8 @@
 
 U-Boot requires a boot script on the first partition with instructions what/where to load and execution.
 
+On SD card boot partition:
+
 	/boot/boot.scr
 
 Script is written in text, e.g. _boot.cmd_, but needs to be in u-boot script format, e.g. _boot.scr_.
@@ -16,7 +18,17 @@ Copy boot folder containig boot.scr to the root of the boot partition on the SD 
 
 Again, have correct mkimage installed or in path or provide path to!
 
-Generate boot script from boot commands:
+Generate boot script from boot commands.
 
-    mkimage -C none -A riscv -T script -d boot.cmd boot.scr
+Usinng provided Make file:
 
+    make clean
+    make
+
+By hand using mkimage:
+
+    mkimage -C none -A riscv -T script -d boot.cmd boot/boot.scr
+
+# Note on plan9.ini
+
+Current script loads plan9.ini if it exists in the root of the SD card.
