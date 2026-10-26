@@ -50,6 +50,7 @@ OBJ=\
 	wdt.$O\
 	ccu.$O\
 	fpu.$O\
+	bootargs.$O\
 	stub.$O\
 	$CONF.root.$O\
 	$CONF.rootc.$O\

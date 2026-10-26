@@ -16,7 +16,6 @@ void trapinit(void);
 
 // Defines to get port included and compiled
 Conf	conf;
-Image*	swapimage;
 
 
 #define UART_LSR_THRE	(1<<5)
@@ -102,12 +101,16 @@ confinit(void)
 	if(conf.nproc > 2000)
 		conf.nproc = 2000;
 	conf.nimage = 200;
+	conf.nswap = conf.npage*3;
+	conf.nswppo = 4096;
 	conf.copymode = 0;		/* copy on write */
 
 	kpages = (conf.npage - conf.upages) * BY2PG;
 	kpages -= conf.upages*sizeof(Page)
 		+ conf.nproc*sizeof(Proc*)
-		+ conf.nimage*sizeof(Image);
+		+ conf.nimage*sizeof(Image)
+		+ conf.nswap
+		+ conf.nswppo*sizeof(Page*);;
 	mainmem->maxsize = kpages;
 	imagmem->maxsize = kpages - (kpages/10);
 }
@@ -130,6 +133,7 @@ init0(void)
 			ksetenv("service", "cpu", 0);
 		else
 			ksetenv("service", "terminal", 0);
+		setconfenv();
 		poperror();
 	}
 	kproc("alarm", alarmkproc, 0);
@@ -222,6 +226,8 @@ void main(void)
 	uart_puts("m->machno = ");
 	uart_puthex64((unsigned long long)m->machno);
 	uart_puts("\n");
+
+	bootargsinit();
 
 	/*
 	 * Min freq. is 288MHz, max is 1008MHz, figure out inbetween

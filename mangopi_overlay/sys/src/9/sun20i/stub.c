@@ -7,11 +7,11 @@
 #include "../port/error.h"
 
 /* ../port/devcons.c */
-char*
-getconf(char*)
-{
-	return nil;		/* no plan9.ini equivalent on this board yet */
-}
+// char*
+// getconf(char*)
+// {
+// 	return nil;		/* no plan9.ini equivalent on this board yet */
+// }
 int
 isaconfig(char*, int, ISAConf*)
 {
@@ -65,32 +65,13 @@ fastticks(uvlong* hz)
 		*hz = TIMEBASEFREQ;
 	return rdtime();
 }
-int
-needpages(void*)
-{
-    panic("needpages");
-}
+
 ulong
 µs(void)
 {
     panic("µs");
 }
-void
-putswap(Page*)
-{
-    panic("putswap");
-}
-int
-swapcount(uintptr)
-{
-    panic("swapcount");
-}
 
-void
-kickpager(void)
-{
-    panic("kickpager");
-}
 
 void
 kprocchild(Proc *p, void (*entry)(void))
@@ -99,11 +80,7 @@ kprocchild(Proc *p, void (*entry)(void))
 	p->sched.sp = (uintptr)p - 16;		/* 16 clear bytes: a callee may spill its first arg to sp+8 */
 	*(void**)p->sched.sp = kprocchild;	/* fake saved pc, for getcallerpc */
 }
-void
-dupswap(Page*)
-{
-    panic("dupswap");
-}
+
 
 
 void	(*proctrace)(Proc*, int, vlong);    /* Delete this when 'proc' is added to the CONF file */

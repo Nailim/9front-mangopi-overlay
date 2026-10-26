@@ -8,6 +8,10 @@ dev
 	srv
 	shr
 	dup
+	swap
+	tls
+	cap
+	segment
 	uart
 	sd
 	usb

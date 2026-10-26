@@ -54,3 +54,7 @@
 
 #define	EHCI1IRQ	49
 #define	OHCI1IRQ	50		    /* 9front has no OHCI driver */
+
+#define	PHYSPLAN9INI	0x40800000	/* U-Boot loads plan9.ini here: above OpenSBI, below the kernel */
+#define	BOOTARGS	((char*)KADDR(PHYSPLAN9INI))
+#define	BOOTARGSLEN	0x2000

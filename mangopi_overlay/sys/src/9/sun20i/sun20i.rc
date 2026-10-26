@@ -1,0 +1,11 @@
+#!/bin/rc
+# sun20i development hook, sourced by the stock bootrc.
+# Keep it optional and local; the boot flow itself stays stock.
+
+ramfs -m /tmp			# scratch for testall / negall
+echo 4096 >/env/profsize
+
+# TODO: remove later - DHCP on any USB Ethernet
+for(i in /net/etherU*)
+	if(test -d $i)
+		ip/ipconfig ether $i

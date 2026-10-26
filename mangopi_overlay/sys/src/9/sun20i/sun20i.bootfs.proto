@@ -1,44 +1,66 @@
 $objtype
 	bin
+		awk
+		auth
+			secstore
 		aux
 			kbdfs
+			wpa
 		bind
+		cat
+		cfs
+		chmod
+		dd
+		echo
+		grep
+		ip
+			ipconfig
+			ping
+		ls
+		mkdir
+		mntgen
+		mount
+		mv
+		ndb
+			dnsgetip
+		rc
+		rm
+		sed
+		sleep
+		srv
+		test
+		tlsclient
+		unmount
+		xd
 		cp
 		cmp
 		diff
 		sort
-		dd
-		rc
-		echo
-		cat
-		ls
-		mkdir
-		nusb
-			usbd
-		rm
-		ps
-		xd
 		ramfs
-		paqfs
-		mount
-		unmount
-		test
+		ps
 		time
-		sleep
 		pwd
-		sed
 		seq
 		prof
-		ip
-			ipconfig
-			ping
+		ns
 rc
 	lib
 		rcmain
+		reboot.rc 555 sys sys ../boot/reboot.rc
+		net.rc 555 sys sys ../boot/net.rc
+		sun20i.rc 555 sys sys ./sun20i.rc
 	bin
-		bootrc 555 sys sys ./bootrc
+		ethermultilink
+		srvtls
+		bootrc 555 sys sys ../boot/bootrc
 		testall 555 sys sys ./test/stage/rc/bin/testall
 		negall 555 sys sys ./test/stage/rc/bin/negall
-	test 775 sys sys ./test/stage/rc/test
+	test d775 sys sys ./test/stage/rc/test
 		+ - - - ./test/stage/rc/test
 tmp
+sys
+	lib
+		kbmap
+			+
+lib
+	firmware
