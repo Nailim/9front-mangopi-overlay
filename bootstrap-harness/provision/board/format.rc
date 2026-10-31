@@ -1,0 +1,19 @@
+#!/bin/rc
+fn fatal {
+	echo format: $* >[1=2]
+	exit $"*
+}
+test -e /dev/sdM0/plan9 || fatal no /dev/sdM0/plan9: card not made by make-card.sh?
+echo This ERASES the filesystem on /dev/sdM0/plan9.
+echo -n 'type yes: '
+a=`{dd -bs 8 -count 1 >[2]/dev/null}
+~ $"a yes || fatal aborted
+if(! disk/prep -bw -a fs /dev/sdM0/plan9)
+	fatal prep failed
+disk/prep -p /dev/sdM0/plan9 >/dev/sdM0/ctl
+echo expect: part fs 278530 7340031
+disk/prep -p /dev/sdM0/plan9
+test -e /dev/sdM0/fs || fatal no /dev/sdM0/fs
+echo -n adm >/dev/hostowner
+hjfs -r -f /dev/sdM0/fs || fatal ream failed
+echo format: done

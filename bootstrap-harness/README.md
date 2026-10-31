@@ -1,8 +1,8 @@
 # How to boot a compiled 9sun20i kernel
 
-A SD card with installed (correct) u-boot and a small FAT partition is required.
+A SD card with installed u-boot and a small FAT partition is required. The kernel itself later on needs correct plan9 file system after FAT partition.
 
-Once installed, copy the 9sun20i binary to the root of the FAT partition, together with a plan9.ini file. Power on Mango Pi board with the SD card inserted.
+Once u-boot is installed, copy the 9sun20i binary to the root of the FAT partition, together with a plan9.ini file. Power on Mango Pi board with the SD card inserted.
 
 For debugging purpuses it helpts if a UART is connected to the board.
 
@@ -17,7 +17,7 @@ Prepared u-boot binary is provided in u-boot-bin directory. Reference README.md 
 
 Reference [sunxi wiki](https://linux-sunxi.org/Bootable_SD_card#Bootloader) for boot partition instructions.
 
-TLDR: create a 16MB FAT partition 1MB from the beginning of the SD card.
+TLDR: create a 128MB FAT partition 1MB from the beginning of the SD card.
 
 ### 3: install u-boot boot script
 
@@ -27,6 +27,9 @@ Prepared u-boot script to load and execute 9sun20i kernel is provided in u-boot-
 
 Copy over, and modufy if needed, the plan9.ini file from plan9-config folder.
 
-### 5: install plan9 kernel
+## Install kernel
+
 
 Copy the build 9sun20i image from /sys/src/9/sun20i source folder into the root of the FAT partition.
+
+If no plan9 file system exist yet then reference provision/README.md

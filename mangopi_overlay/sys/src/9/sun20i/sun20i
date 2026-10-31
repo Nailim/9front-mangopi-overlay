@@ -43,5 +43,6 @@ misc
 bootdir
 	boot
 	/$objtype/bin/paqfs
+	/$objtype/bin/auth/factotum
 	$CONF.bootfs.paq	bootfs.paq
 

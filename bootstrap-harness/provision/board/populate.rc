@@ -1,0 +1,15 @@
+#!/bin/rc
+fn fatal {
+	echo populate: $* >[1=2]
+	exit $"*
+}
+test -e /n/vm/root.proto || fatal /n/vm not mounted: see provision/README.md step 6
+test -e /dev/sdM0/fs || fatal no /dev/sdM0/fs: run format.rc first
+echo -n adm >/dev/hostowner
+if(! test -e /srv/hjfs)
+	if(! hjfs -f /dev/sdM0/fs)
+		fatal hjfs failed
+mount -c /srv/hjfs /n/fs || fatal mount /n/fs failed
+disk/mkfs -s /n/vm -d /n/fs /n/vm/root.proto
+echo sync >>/srv/hjfs.cmd
+echo populate: done. Wait a few seconds for the sync, then power-cycle.

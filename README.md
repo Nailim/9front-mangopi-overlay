@@ -4,7 +4,7 @@ An attempt to port 9front to RiscV [MangoPi](https://mangopi.org/mqpro) (Allwinn
 
 ## about
 
-Working on phase 9.
+Working on phase 9 ...
 
 A practical learning project atempting to pring 9front to MangoPi SBC. This is standing on the complimentari project trying to port [riscv compiler to 9front](https://github.com/Nailim/9front-riscv-overlay).
 
@@ -21,7 +21,7 @@ To keep things managable a few phases are planned:
 * phase 7: ~~storage driver - read FS from SD card -> try to build and use some of the binaries~~
 * phase 8: ~~network driver - something generic LAN on USB (is this a real system now?)~~
 * phase 9: implemen the rest of the "owl" ...
-	* phase 9a: boot flow and init
+	* phase ~~9a: boot flow and init~~
 	* phase 9b: headless network, time, cpu server
 	* phase 9c: integrate reset command
 	* phase 9d: display

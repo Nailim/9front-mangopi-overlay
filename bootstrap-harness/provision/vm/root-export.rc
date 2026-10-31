@@ -1,0 +1,36 @@
+#!/bin/rc
+# root-export.rc [port [arch]]  -  Del to stop
+port=7777
+arch=riscv64
+if(! ~ $#1 0)
+	port=$1
+if(! ~ $#2 0)
+	arch=$2
+d=`{echo $0 | sed -n 's,/[^/]*$,,p'}
+if(~ $#d 0)
+	d=.
+here=`{cd $d && pwd}
+for(f in /adm/users /sys/lib/newuser /lib/namespace /lib/units /lib/ndb/local \
+		/lib/ndb/common /$arch/init /$arch/bin/rc $here/root.proto $here/../board/populate.rc)
+	if(! test -e $f){
+		echo root-export: missing $f >[1=2]
+		exit missing
+	}
+rfork n
+e=/tmp/rootexp
+rm -rf $e
+mkdir -p $e/adm/timezone $e/lib/ndb $e/rc $e/$arch $e/sys/lib $e/board
+mkdir -p $e/mnt $e/fd $e/n $e/net $e/proc $e/srv $e/dev $e/env $e/tmp $e/usr
+touch $e/adm/users $e/lib/namespace $e/lib/units $e/sys/lib/newuser $e/root.proto
+bind /adm/timezone $e/adm/timezone
+bind /adm/users $e/adm/users
+bind /lib/namespace $e/lib/namespace
+bind /lib/units $e/lib/units
+bind /lib/ndb $e/lib/ndb
+bind /rc $e/rc
+bind /$arch $e/$arch
+bind /sys/lib/newuser $e/sys/lib/newuser
+bind $here/root.proto $e/root.proto
+bind $here/../board $e/board
+echo root-export: serving $arch on tcp!*!$port, Del to stop >[1=2]
+exec aux/listen1 -tv tcp!*!$port /bin/exportfs -R -r $e

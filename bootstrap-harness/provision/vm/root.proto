@@ -1,0 +1,46 @@
+# root of the card's fs; sources are paths in the export tree
+adm
+	timezone
+		*
+	users
+fd
+lib
+	namespace
+	ndb
+		local
+		common
+	units
+rc
+	+
+$cputype
+	init
+	bin
+		*
+		auth
+			*
+		aux
+			*
+		disk
+			*
+		ip
+			*
+		ndb
+			*
+		nusb
+			*
+	lib
+		*
+mnt
+n
+net
+proc
+srv
+dev
+env
+tmp
+# existing dir as source: mkfs creates glenda's home empty
+usr
+	glenda d775 glenda glenda /tmp
+sys
+	lib
+		newuser

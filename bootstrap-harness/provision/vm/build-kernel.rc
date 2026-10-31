@@ -1,0 +1,20 @@
+#!/bin/rc
+# build-kernel.rc  -  run on the 9front VM
+d=`{echo $0 | sed -n 's,/[^/]*$,,p'}
+if(~ $#d 0)
+	d=.
+here=`{cd $d && pwd}
+kdir=/sys/src/9/sun20i
+out=$here/../build/kernel
+fn fatal {
+	echo build-kernel: $* >[1=2]
+	exit $"*
+}
+test -d $kdir || fatal $kdir missing: bind the overlay first
+if(! @{cd $kdir/test && mk tests})
+	fatal tests failed
+if(! @{cd $kdir && mk clean && mk})
+	fatal kernel build failed
+mkdir -p $out
+cp $kdir/9sun20i $out/9sun20i
+ls -l $out/9sun20i

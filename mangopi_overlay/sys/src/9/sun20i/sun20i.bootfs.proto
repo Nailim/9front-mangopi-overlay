@@ -11,6 +11,8 @@ $objtype
 		cfs
 		chmod
 		dd
+		disk
+			mkfs
 		echo
 		grep
 		ip
@@ -42,6 +44,7 @@ $objtype
 		pwd
 		seq
 		prof
+		wc
 		ns
 rc
 	lib
