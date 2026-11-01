@@ -8,12 +8,13 @@ echo This ERASES the filesystem on /dev/sdM0/plan9.
 echo -n 'type yes: '
 a=`{dd -bs 8 -count 1 >[2]/dev/null}
 ~ $"a yes || fatal aborted
-if(! disk/prep -bw -a fs /dev/sdM0/plan9)
+if(! disk/prep -bw -a nvram -a fs /dev/sdM0/plan9)
 	fatal prep failed
 disk/prep -p /dev/sdM0/plan9 >/dev/sdM0/ctl
-echo expect: part fs 278530 7340031
 disk/prep -p /dev/sdM0/plan9
+test -e /dev/sdM0/nvram || fatal no /dev/sdM0/nvram
 test -e /dev/sdM0/fs || fatal no /dev/sdM0/fs
+dd -if /dev/zero -of /dev/sdM0/nvram -bs 512 -count 1
 echo -n adm >/dev/hostowner
 hjfs -r -f /dev/sdM0/fs || fatal ream failed
 echo format: done

@@ -8,7 +8,12 @@ name=$(basename "$dev")
 [ -b "$dev" ] || { echo "$dev is not a block device" >&2; exit 1; }
 [ "$(cat /sys/block/$name/removable 2>/dev/null)" = 1 ] || [ "${FORCE:-}" = 1 ] ||
 	{ echo "$dev is not removable (FORCE=1 to override)" >&2; exit 1; }
-! grep -q "^$dev" /proc/mounts || { echo "$dev is mounted" >&2; exit 1; }
+if grep -q "^$dev" /proc/mounts; then
+	echo "$dev is mounted:" >&2
+	grep "^$dev" /proc/mounts >&2
+	echo "unmount first, e.g.: sudo umount $(grep "^$dev" /proc/mounts | awk '{print $1}' | tr '\n' ' ')" >&2
+	exit 1
+fi
 [ -f "$uboot" ] || { echo "missing $uboot" >&2; exit 1; }
 [ "$(sudo blockdev --getsz "$dev")" -ge 7340032 ] || { echo "card smaller than 3.5 GiB" >&2; exit 1; }
 lsblk -o NAME,SIZE,MODEL,TRAN "$dev"

@@ -32,5 +32,6 @@ bind /$arch $e/$arch
 bind /sys/lib/newuser $e/sys/lib/newuser
 bind $here/root.proto $e/root.proto
 bind $here/../board $e/board
+bind $here/../board/ndb.local $e/lib/ndb/local
 echo root-export: serving $arch on tcp!*!$port, Del to stop >[1=2]
 exec aux/listen1 -tv tcp!*!$port /bin/exportfs -R -r $e

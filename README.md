@@ -22,7 +22,7 @@ To keep things managable a few phases are planned:
 * phase 8: ~~network driver - something generic LAN on USB (is this a real system now?)~~
 * phase 9: implemen the rest of the "owl" ...
 	* phase ~~9a: boot flow and init~~
-	* phase 9b: headless network, time, cpu server
+	* phase ~~9b: headless network, time, cpu server~~
 	* phase 9c: integrate reset command
 	* phase 9d: display
 	* phase 9e: keyboard and mouse

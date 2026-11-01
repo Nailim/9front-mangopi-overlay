@@ -5,6 +5,10 @@
 ramfs -m /tmp			# scratch for testall / negall
 echo 4096 >/env/profsize
 
+echo -n mangopi >/dev/sysname
+
+ip/ipconfig loopback /dev/null 127.0.0.1
+
 # TODO: remove later - DHCP on any USB Ethernet
 for(i in /net/etherU*)
 	if(test -d $i)

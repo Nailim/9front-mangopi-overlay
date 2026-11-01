@@ -17,3 +17,9 @@ New cards only; asks for "yes".
 Starts hjfs, mounts it on /n/fs, copies the root from /n/vm.
 
 Safe to rerun (overwrites files, never reams).
+
+## ndb.local
+
+    ndb.local
+
+Network config file. Set up with loopback, add own interface if needed.
