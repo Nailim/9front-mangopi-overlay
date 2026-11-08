@@ -41,3 +41,13 @@ in area/manifest (and REFS if it has a reference), mk tests.
 What this cannot catch: a stale libc.a or compiler.  The stamp proves the
 test was rebuilt now, not that libc was reinstalled first - run
 `mk install` in /sys/src/libc before `mk tests` after any libc change.
+
+Compiler checks that run the compiler on the board (not part of `mk tests`
+or testall; run from a VM shell with the overlay bound and the board's key in
+the VM's factotum):
+
+	xcheck.rc <board-ip>	compiles the six cc sources to assembly on the VM
+				and on the board and compares (fast)
+	xbuild.rc <board-ip>	the board rebuilds jc from source, then compares
+				the result and its output with the VM's (minutes)
+

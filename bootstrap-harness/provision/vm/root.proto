@@ -5,11 +5,7 @@ adm
 	users
 fd
 lib
-	namespace
-	ndb
-		local
-		common
-	units
+	+
 rc
 	+
 $cputype
@@ -43,4 +39,4 @@ usr
 	glenda d775 glenda glenda /tmp
 sys
 	lib
-		newuser
+		+

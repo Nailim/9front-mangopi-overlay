@@ -35,7 +35,6 @@ trapinit(void)
 void
 clockintr(Ureg *ureg, void*)
 {
-	wdt_riscv_feed();		/* the old feed loop went away with schedinit() */
 	timer0ack();			/* dismiss the hardware */
 	timerintr(ureg, 0);		/* portable clock: m->ticks, timer list, re-arm */
 }

@@ -2,6 +2,7 @@ CONF=sun20i
 CONFLIST=sun20i
 
 KTZERO=0xFFFFFFFFC1000000	# KZERO+PHYSTEXT, must match mem.h
+REBOOTADDR=0x40900000		# REBOOTADDR, must match mem.h
 
 objtype=riscv64
 </$objtype/mkfile
@@ -51,6 +52,8 @@ OBJ=\
 	ccu.$O\
 	fpu.$O\
 	bootargs.$O\
+	rebootcmd.$O\
+	archsun20i.$O\
 	stub.$O\
 	$CONF.root.$O\
 	$CONF.rootc.$O\
@@ -82,3 +85,10 @@ initcode.out:	init9.$O initcode.$O /$objtype/lib/libc.a
 
 devusb.$O usbehci.$O usbehcisun20i.$O: ../port/usb.h
 usbehci.$O usbehcisun20i.$O: usbehci.h
+
+
+main.$O: rebootcode.i
+
+rebootcode.out:	rebootcode.$O
+	$LD -l -H1 -T$REBOOTADDR -o $target rebootcode.$O
+

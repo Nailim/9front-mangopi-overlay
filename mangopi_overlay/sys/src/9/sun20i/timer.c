@@ -102,6 +102,16 @@ timer0set(ulong ticks)
 }
 
 void
+timer0stop(void)
+{
+	Timerregs *tr = (Timerregs*)KADDR(PHYSTIMER);
+
+	tr->irqen &= ~Timer0Irq;
+	tr->ctl0 = 0;
+	timer0ack();
+}
+
+void
 timerset(uvlong when)
 {
 	vlong period;

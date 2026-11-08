@@ -1,0 +1,8 @@
+database=
+	file=/net/ndb
+	file=/lib/ndb/local
+	file=/lib/ndb/common
+
+ip=127.0.0.1 sys=mangopi sys=localhost dom=localhost
+	auth=mangopi
+	authdom=mangopi

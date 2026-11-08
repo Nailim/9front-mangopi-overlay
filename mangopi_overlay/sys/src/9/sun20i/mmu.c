@@ -39,6 +39,8 @@ static uintptr *root;   /* PA of the root table */
 
 static uintptr kernelsatp;
 
+static uintptr lowsave[2];	/* root entries dropped by mmulowdrop */
+
 static uintptr*
 newtable(void)
 {
@@ -183,6 +185,8 @@ mmulowdrop(void)
 	uintptr *r;
 
 	r = KADDR((uintptr)root);	/* root holds a PA; we run high now */
+	lowsave[0] = r[PTLX(PHYSTEXT, 2)];
+	lowsave[1] = r[PTLX(PHYSPIO, 2)];
 	r[PTLX(PHYSTEXT, 2)] = 0;
 	r[PTLX(PHYSPIO, 2)] = 0;
 	sfencevma();
@@ -488,4 +492,21 @@ dcflush(void *v, usize n)
 	pa = PADDR((uintptr)v);
 	off = pa & (CACHELINE-1);
 	dcacheciparange(pa - off, ROUND(n + off, CACHELINE));
+}
+
+
+/*
+ * Reboot: bring the identity map back and run on the kernel root, so the
+ * trampoline can run at its physical address and leave translation.
+ */
+void
+mmureboot(void)
+{
+	uintptr *r;
+
+	r = KADDR((uintptr)root);
+	r[PTLX(PHYSTEXT, 2)] = lowsave[0];
+	r[PTLX(PHYSPIO, 2)] = lowsave[1];
+	coherence();
+	satpset(kernelsatp);		/* includes sfence.vma */
 }

@@ -1,0 +1,46 @@
+#!/bin/rc
+# xcheck.rc board-ip
+#
+# Compiler cross-check, not part of `mk tests` / testall.  Compiles each
+# cc test to assembly with the VM's jc (an amd64 build) and with the
+# board's jc (a riscv64 build, run remotely over rcpu, sources and headers
+# taken from the VM through /mnt/term) and compares the two outputs.  It is
+# the same compiler source built for two machines: a difference is a
+# host dependence or a miscompile of the compiler.
+#
+# Run in a VM shell that has the overlay bound, with the board's key in
+# the VM's factotum (same as for rcpu).  Nothing is written into the
+# source tree: objects and listings go to /tmp.
+
+srcs=(int fp nan cast fpconst assign)
+dir=/sys/src/9/sun20i/test/cc
+
+if(~ $1 onboard){
+	# runs on the board
+	bind -a /mnt/term/sys /sys
+	bind -a /mnt/term/riscv64 /riscv64
+	cd /mnt/term^$dir
+	for(s in $srcs){
+		echo -n $s' '
+		time jc -S -o /tmp/xcheck.board.$s.j '-DBUILD=1' $s.c >/tmp/xcheck.board.$s.S
+		if(cmp -s /tmp/xcheck.board.$s.S /mnt/term/tmp/xcheck.vm.$s.S)
+			echo IDENTICAL $s
+		if not{
+			echo DIFFERENT $s
+			diff /tmp/xcheck.board.$s.S /mnt/term/tmp/xcheck.vm.$s.S | sed 6q
+		}
+	}
+	exit
+}
+
+if(~ $#1 0){
+	echo usage: xcheck.rc board-ip >[1=2]
+	exit usage
+}
+board=$1
+cd $dir
+echo compiling on the VM
+for(s in $srcs)
+	time jc -S -o /tmp/xcheck.vm.$s.j '-DBUILD=1' $s.c >/tmp/xcheck.vm.$s.S
+echo compiling on the board
+rcpu -h $board -u glenda -c 'rc /mnt/term/sys/src/9/sun20i/test/xcheck.rc onboard'

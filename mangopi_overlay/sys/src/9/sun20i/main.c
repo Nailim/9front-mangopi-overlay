@@ -6,6 +6,8 @@
 #include "pool.h"
 #include "io.h"
 
+#include "rebootcode.i"
+
 #include "tos.h"	// maybe remove later
 
 void dummy(unsigned int);
@@ -217,7 +219,7 @@ void main(void)
 
 	uartconsinit();
 
-	uart_puts("9sun20i: Plan9 riscv64 D1 kernel skeleton starting\n");
+	uart_puts("9sun20i: Plan9 riscv64 D1 kernel skeleton starting (soft)\n");
 
 	uart_puts("main at ");
 	uart_puthex64((unsigned long long)main);
@@ -240,13 +242,15 @@ void main(void)
 
 	xinit();
 
+	timersinit();
+
+	wdogstart();	/* restart watchdog settings set up by u-boot */
+
 	printinit();
 
 	smhcprobe();	// temporary printout
 
 	quotefmtinstall();
-
-	timersinit();
 
 	initseg();
 	links();
@@ -267,6 +271,20 @@ void main(void)
 	schedinit();		/* never returns */
 }
 
+void
+exit(int)
+{
+    cpushutdown();
+	splhi();
+
+	if(m->machno == 0){
+		/* clear secrets */
+		zeroprivatepages();
+		poolreset(secrmem);
+	}
+	archreboot();
+}
+
 
 void
 setupwatchpts(Proc *, Watchpt *, int n)
@@ -275,3 +293,43 @@ setupwatchpts(Proc *, Watchpt *, int n)
 		error("no watchpoints");
 }
 
+static void
+rebootjump(void *code, ulong size)
+{
+	static uvlong args[3];	/* dest, source, size: physical, for the trampoline */
+	void (*f)(void*);
+
+	timer0stop();
+	plicshutdown();
+
+	args[0] = PADDR(KTZERO);
+	args[1] = PADDR(code);
+	args[2] = (size + 7) & ~7;
+
+	memmove(KADDR(REBOOTADDR), rebootcode, sizeof(rebootcode));
+	dcflush(KADDR(REBOOTADDR), sizeof(rebootcode));
+	synci();
+
+	mmureboot();			/* identity map back, kernel root */
+	f = (void (*)(void*))REBOOTADDR;
+	(*f)(args);			/* physical address: never returns */
+	for(;;);
+}
+
+void
+reboot(void*, void *code, ulong size)
+{
+	writeconf();
+	delay(2000);
+	cpushutdown();
+	splhi();
+
+	serialoq = nil;			/* turn off buffered serial console */
+	chandevshutdown();		/* EHCI reset: no more DMA */
+
+	zeroprivatepages();		/* clear secrets */
+	poolreset(secrmem);
+
+	wdogfeed();			/* the new kernel gets the full window */
+	rebootjump(code, size);
+}

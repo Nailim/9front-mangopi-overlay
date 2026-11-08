@@ -1,0 +1,97 @@
+#!/bin/rc
+# xbuild.rc board-ip
+#
+# Compiler bootstrap check, not part of `mk tests` / testall.  The board
+# rebuilds the riscv64 compiler (cmd/cc library + cmd/ic -> jc) from
+# source with its own jc, then:
+#   stage 1: the stripped board-built jc is compared with the stripped
+#            jc installed in /riscv64/bin (built on the VM by the amd64 jc)
+#   parser : the y.tab.c produced by the board's yacc is compared with the
+#            VM's
+#   stage 2: the board-built jc compiles test/cc/int.c to assembly, which is
+#            compared with the VM's jc output for the same file
+# IDENTICAL on all three means the compiler reproduces itself on the machine
+# it runs on.  A DIFFERENT is something to read (the first lines of the
+# difference are printed), not automatically a bug: executables can embed
+# paths or timestamps.
+#
+# Run in a VM shell that has the overlay bound, with the board's key in the
+# VM's factotum (same as for rcpu).  It takes several minutes: the D1
+# compiles about 40x slower than the VM.  The build happens in /tmp/xbuild
+# on the board; logs are /tmp/xbuild/cc.log and /tmp/xbuild/ic.log.  Nothing
+# is installed and nothing is written into the source tree.
+
+testdir=/sys/src/9/sun20i/test
+
+if(~ $1 onboard){
+	# runs on the board
+	objtype=riscv64
+	cputype=riscv64
+	fn fail {
+		echo xbuild: $* >[1=2]
+		exit failed
+	}
+	fn same {
+		# same label file1 file2
+		if(cmp -s $2 $3)
+			echo IDENTICAL $1
+		if not{
+			echo DIFFERENT $1
+			cmp $2 $3 | sed 3q
+		}
+	}
+	bind -a /mnt/term/sys /sys
+	bind -a /mnt/term/sys/lib /sys/lib		# the card has its own /sys/lib: yaccpar
+	bind -a /mnt/term/riscv64 /riscv64
+	w=/tmp/xbuild
+	rm -rf $w
+	mkdir -p $w/cc $w/ic
+
+	# sources only: objects and generated files copied from the VM would
+	# make mk skip the very steps this is meant to exercise
+	for(d in cc ic)
+		for(f in /sys/src/cmd/$d/*)
+			switch($f){
+			case *.j *.aj *.out *y.tab.* *.acid
+				status=''
+			case *
+				if(test -f $f)
+					cp $f $w/$d
+			}
+
+	echo building the cc library
+	cd $w/cc
+	time mk cc.aj >$w/cc.log >[2=1] || fail cc build failed, see $w/cc.log
+	echo building jc
+	cd $w/ic
+	time mk j.out >$w/ic.log >[2=1] || fail ic build failed, see $w/ic.log
+
+	strip -o $w/jc.board $w/ic/j.out || fail strip failed
+	ls -l $w/jc.board /mnt/term/tmp/xbuild.vm.jc
+	same 'stage 1: board-built jc == installed jc' $w/jc.board /mnt/term/tmp/xbuild.vm.jc
+	# y.tab.c carries '#line N "<build dir>/cc.y"': compare without those lines
+	sed '/^#line/d' $w/cc/y.tab.c >$w/y.board
+	sed '/^#line/d' /mnt/term/sys/src/cmd/cc/y.tab.c >$w/y.vm
+	same 'parser: y.tab.c from the board yacc == the VM (ignoring #line)' $w/y.board $w/y.vm
+
+	cd /mnt/term^$testdir/cc
+	echo stage 2: compiling int.c with the board-built jc
+	time $w/ic/j.out -S -o /tmp/xbuild.s2.j '-DBUILD=1' int.c >/tmp/xbuild.s2.S
+	same 'stage 2: int.c assembly, board-built jc == VM jc' /tmp/xbuild.s2.S /mnt/term/tmp/xbuild.vm.int.S
+	exit
+}
+
+if(~ $#1 0){
+	echo usage: xbuild.rc board-ip >[1=2]
+	exit usage
+}
+board=$1
+cd $testdir/cc
+echo preparing the VM side
+strip -o /tmp/xbuild.vm.jc /riscv64/bin/jc || {
+	echo xbuild: strip of /riscv64/bin/jc failed >[1=2]
+	exit failed
+}
+jc -S -o /tmp/xbuild.vm.int.j '-DBUILD=1' int.c >/tmp/xbuild.vm.int.S
+echo 'running on the board (several minutes)'
+rcpu -h $board -u glenda -c 'rc /mnt/term/sys/src/9/sun20i/test/xbuild.rc onboard'

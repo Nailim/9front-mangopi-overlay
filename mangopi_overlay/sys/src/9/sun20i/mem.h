@@ -35,6 +35,7 @@
  */
 #define	PHYSDRAM	0x40000000		/* DRAM base */
 #define	PHYSTEXT	0x41000000		/* where u-boot loads the kernel */
+#define	REBOOTADDR	0x40900000		/* trampoline - above plan9.ini content but below kernel */
 
 /*
  * Virtual layout

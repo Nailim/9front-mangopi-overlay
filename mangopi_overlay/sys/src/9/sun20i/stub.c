@@ -5,6 +5,7 @@
 #include "fns.h"
 #include "io.h"
 #include "../port/error.h"
+#include "pool.h"
 
 /* ../port/devcons.c */
 // char*
@@ -43,19 +44,6 @@ dumpstack(void)
 {
     /* no stack trace yet - must not panic, panic() calls this */
     // panic("dumpstack");
-}
-void
-exit(int)
-{
-    splhi();
-	uart_puts("exit: halted\n");
-	for(;;)
-		idlehands();
-}
-void
-rebootcmd(int, char**)
-{
-    panic("rebootcmd");
 }
 uvlong
 fastticks(uvlong* hz)

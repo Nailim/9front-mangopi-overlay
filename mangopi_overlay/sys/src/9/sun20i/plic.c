@@ -97,3 +97,16 @@ pliccomplete(int irq)
 
 	ctl->claim = irq;
 }
+
+void
+plicshutdown(void)
+{
+	ulong *en = KADDR(PHYSPLICEN);
+	int i, irq;
+
+	for(i = 0; i < (nelem(vctl)+31)/32; i++)
+		en[i] = 0;
+	coherence();
+	while((irq = plicclaim()) != 0)		/* drain anything pending */
+		pliccomplete(irq);
+}

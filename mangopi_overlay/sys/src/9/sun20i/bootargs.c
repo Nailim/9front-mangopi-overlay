@@ -98,3 +98,31 @@ setconfenv(void)
 		ksetenv(confname[i], confval[i], 1);
 	}
 }
+
+void
+writeconf(void)
+{
+	char *p, *q;
+	int n;
+
+	p = getconfenv();
+	if(waserror()){
+		free(p);
+		nexterror();
+	}
+	/* convert to name=value\n format */
+	for(q = p; *q; q++){
+		q += strlen(q);
+		*q = '=';
+		q += strlen(q);
+		*q = '\n';
+	}
+	n = q - p + 1;
+	if(n >= BOOTARGSLEN)
+		error("kernel configuration too large");
+	memmove(BOOTARGS, p, n);
+	memset(BOOTARGS+n, 0, BOOTARGSLEN-n);
+	poperror();
+	free(p);
+}
+

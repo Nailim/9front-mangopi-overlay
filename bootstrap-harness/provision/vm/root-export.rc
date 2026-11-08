@@ -19,17 +19,17 @@ for(f in /adm/users /sys/lib/newuser /lib/namespace /lib/units /lib/ndb/local \
 rfork n
 e=/tmp/rootexp
 rm -rf $e
-mkdir -p $e/adm/timezone $e/lib/ndb $e/rc $e/$arch $e/sys/lib $e/board
+mkdir -p $e/adm/timezone $e/rc $e/$arch $e/sys/lib $e/lib $e/board
 mkdir -p $e/mnt $e/fd $e/n $e/net $e/proc $e/srv $e/dev $e/env $e/tmp $e/usr
-touch $e/adm/users $e/lib/namespace $e/lib/units $e/sys/lib/newuser $e/root.proto
+touch $e/adm/users $e/root.proto
 bind /adm/timezone $e/adm/timezone
 bind /adm/users $e/adm/users
-bind /lib/namespace $e/lib/namespace
-bind /lib/units $e/lib/units
-bind /lib/ndb $e/lib/ndb
+bind /lib $e/lib
 bind /rc $e/rc
 bind /$arch $e/$arch
-bind /sys/lib/newuser $e/sys/lib/newuser
+bind /sys/lib $e/sys/lib
+bind /sys/lib/plumb/basic $e/sys/lib/plumb/basic
+bind /lib/font/bit/vga/unicode.font $e/lib/font/bit/vga/unicode.font
 bind $here/root.proto $e/root.proto
 bind $here/../board $e/board
 bind $here/../board/ndb.local $e/lib/ndb/local

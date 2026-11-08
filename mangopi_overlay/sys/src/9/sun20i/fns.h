@@ -43,10 +43,12 @@ uintptr	mmubootstrap(void);
 void*	mmuhighentry(void);
 void	mmulowdrop(void);
 uintptr dramsize(void);
+void    mmureboot(void);
 
 /* timer.c */
 void	timer0init(ulong);
 void	timer0ack(void);
+void    timer0stop(void);
 
 /* plic.c */
 void	intrenable(int, void (*)(Ureg*, void*), void*, int, char*);
@@ -55,6 +57,7 @@ void	plicinit(void);
 void	plicenable(int, int);
 int     plicclaim(void);
 void	pliccomplete(int);
+void    plicshutdown(void);
 
 /* wdt.c */
 void	wdt_main_enable(unsigned int);
@@ -69,6 +72,12 @@ void    cpuclockinit(int);
 void	mmc0enable(void);
 void	mmc0clock(int);
 ulong	peri1xfreq(void);
+
+/* bootargs.c */
+void    writeconf(void);
+
+/* archsun20i.c */
+void	archreboot(void);
 
 /* things called from port*/
 #define	getpgcolor(a)	0
@@ -156,3 +165,7 @@ void    forkretfp(void);
 
 void    bootargsinit(void);
 void    setconfenv(void);
+
+void    wdogfeed(void);
+void    wdogoff(void);
+void    wdogstart(void);
