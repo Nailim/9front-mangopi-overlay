@@ -250,6 +250,8 @@ void main(void)
 
 	smhcprobe();	// temporary printout
 
+	hdmiinit();
+
 	quotefmtinstall();
 
 	initseg();

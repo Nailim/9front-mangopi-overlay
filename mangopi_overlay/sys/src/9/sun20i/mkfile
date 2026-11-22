@@ -51,6 +51,7 @@ OBJ=\
 	wdt.$O\
 	ccu.$O\
 	fpu.$O\
+	hdmi.$O\
 	bootargs.$O\
 	rebootcmd.$O\
 	archsun20i.$O\
@@ -64,6 +65,9 @@ LIB=\
 	/$objtype/lib/libip.a\
 	/$objtype/lib/libsec.a\
 	/$objtype/lib/libmp.a\
+	/$objtype/lib/libmemlayer.a\
+	/$objtype/lib/libmemdraw.a\
+	/$objtype/lib/libdraw.a\
 	/$objtype/lib/libc.a\
 
 $p$CONF:D:	$OBJ $CONF.$O $LIB

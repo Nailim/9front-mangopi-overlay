@@ -142,6 +142,10 @@ mmubootstrap(void)
 	maphigh(PHYSPLICEN, BY2PG, PTELEAFDEV);     /* PLIC enable, context 1 */
 	maphigh(PHYSPLICCTL, BY2PG, PTELEAFDEV);	/* PLIC threshold/claim, context 1 */
 
+	maphigh(PHYSDE, 0x200000, PTELEAFDEV);		/* DISPLAY */
+	maphigh(PHYSTCONTOP, 0x20000, PTELEAFDEV);	/* DISPLAY */
+	maphigh(PHYSHDMI, 0x20000, PTELEAFDEV);		/* DISPLAY */
+
 	/* identity: mirrors for the trampoline */
 	mapblock(PHYSDRAM, PHYSDRAM, DRAMMAX, PTELEAFMEM);
 	mapident(PHYSPIO, PHYSPIOSIZE, PTELEAFDEV);

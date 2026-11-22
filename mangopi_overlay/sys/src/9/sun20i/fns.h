@@ -169,3 +169,7 @@ void    setconfenv(void);
 void    wdogfeed(void);
 void    wdogoff(void);
 void    wdogstart(void);
+
+void    hdmiinit(void);
+
+void*	screeninit(int, int, int);	/* screen.c */

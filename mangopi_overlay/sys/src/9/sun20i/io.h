@@ -58,3 +58,11 @@
 #define	PHYSPLAN9INI	0x40800000	/* U-Boot loads plan9.ini here: above OpenSBI, below the kernel */
 #define	BOOTARGS	((char*)KADDR(PHYSPLAN9INI))
 #define	BOOTARGSLEN	0x2000
+
+/* Display ... */
+#define	PHYSDE      0x05000000
+#define	PHYSMIXER0  0x05100000
+#define	PHYSTCONTOP 0x05460000
+#define	PHYSTCONTV0 0x05470000
+#define	PHYSHDMI    0x05500000
+#define PHYSHDMIPHY	0x05510000
