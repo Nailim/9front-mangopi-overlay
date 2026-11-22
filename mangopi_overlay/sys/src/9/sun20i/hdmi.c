@@ -490,7 +490,12 @@ mixerlayer(void *fb)
 void
 blankscreen(int blank)
 {
-	USED(blank);
+	ulong *tv;
+
+	if(!hdmiup)
+		return;
+	tv = KADDR(PHYSTCONTV0);
+	wr(tv, TvCtl, blank ? TvDelay : TconEn|TvDelay);
 }
 
 
