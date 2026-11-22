@@ -327,6 +327,7 @@ reboot(void*, void *code, ulong size)
 	splhi();
 
 	serialoq = nil;			/* turn off buffered serial console */
+	hdmishutdown();			/* stop the DE reading memory */
 	chandevshutdown();		/* EHCI reset: no more DMA */
 
 	zeroprivatepages();		/* clear secrets */

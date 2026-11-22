@@ -91,6 +91,8 @@ enum {
 	TvDelay		= (Vtotal-Vactive-2)<<4,	/* start delay, 28 here, max 30 */
 };
 
+static int hdmiup;
+
 static void
 wr(ulong *b, ulong off, ulong v)
 {
@@ -245,16 +247,9 @@ phywait(ulong *phy, ulong bit, char *what)
 	return -1;
 }
 
-static int
-phyinit(ulong *p)
+static void
+phyoff(ulong *p)
 {
-	/* REXT calibration resistor enable, then the upper half = 0x80c0 */
-	p[PhyRext/4] |= 1<<31;
-	p[PhyRext/4] = p[PhyRext/4] & 0xffff | 0x80c00000;
-
-	fld(p, PhyCtl5, 19, 16, 0xf);		/* p1opt: all channels */
-
-	/* reset everything off */
 	fld(p, PhyCtl0, 27, 24, 0);		/* entx */
 	fld(p, PhyCtl5, 10, 10, 0);		/* enresck */
 	fld(p, PhyCtl5, 9, 9, 0);		/* enres */
@@ -269,6 +264,19 @@ phyinit(ulong *p)
 	fld(p, PllCtl1, 11, 11, 1);		/* reset */
 	fld(p, PllCtl1, 12, 12, 0);		/* pwron */
 	fld(p, PllCtl0, 28, 28, 0);		/* envbs */
+}
+
+static int
+phyinit(ulong *p)
+{
+	/* REXT calibration resistor enable, then the upper half = 0x80c0 */
+	p[PhyRext/4] |= 1<<31;
+	p[PhyRext/4] = p[PhyRext/4] & 0xffff | 0x80c00000;
+
+	fld(p, PhyCtl5, 19, 16, 0xf);		/* p1opt: all channels */
+
+	/* reset everything off */
+	phyoff(p);
 
 	/* PLL setup */
 	fld(p, PllCtl0, 31, 30, 3);		/* cko_sel */
@@ -506,4 +514,34 @@ hdmiinit(void)
 	}
 
 	mixerlayer(fb);
+	hdmiup = 1;
+}
+
+/*
+ * Back to the cold state, in reverse order of hdmiinit.
+ */
+void
+hdmishutdown(void)
+{
+	ulong *ccu;
+
+	if(!hdmiup)
+		return;
+	hdmiup = 0;
+
+	wr(KADDR(PHYSTCONTV0), TvCtl, 0);		/* channel 1 off */
+	wr(KADDR(PHYSTCONTV0), TvGctl, 0);		/* TCON off */
+	wr(KADDR(PHYSTCONTOP), TopGateSrc, 0);
+	wr(KADDR(PHYSMIXER0), GlbCtl, 0);		/* mixer off */
+	phyoff(KADDR(PHYSHDMIPHY));
+
+	ccu = KADDR(PHYSCCU);
+	ccu[TconTvBus] = 0;
+	ccu[TconTvClk] = 0;
+	ccu[DeBus] = 0;
+	ccu[DeClk] = 0;
+	ccu[DpssBus] = 0;
+	ccu[HdmiBus] = 0;
+	ccu[HdmiClk] = 0;
+	ccu[PllVideo0] &= ~(PllOut|PllEn);
 }

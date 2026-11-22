@@ -170,6 +170,8 @@ void    wdogfeed(void);
 void    wdogoff(void);
 void    wdogstart(void);
 
+/* hdmi.c */
 void    hdmiinit(void);
+void	hdmishutdown(void);
 
 void*	screeninit(int, int, int);	/* screen.c */

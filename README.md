@@ -4,7 +4,7 @@ An attempt to port 9front to RiscV [MangoPi](https://mangopi.org/mqpro) (Allwinn
 
 ## about
 
-Working on phase 9 ...
+Working on phase 9d ...
 
 A practical learning project atempting to pring 9front to MangoPi SBC. This is standing on the complimentari project trying to port [riscv compiler to 9front](https://github.com/Nailim/9front-riscv-overlay).
 
@@ -24,11 +24,12 @@ To keep things managable a few phases are planned:
 	* phase ~~9a: boot flow and init~~
 	* phase ~~9b: headless network, time, cpu server~~
 	* phase ~~9c: integrate reset command~~
-	* phase 9d: display
+	* phase 9d: display (hdmi)
 	* phase 9e: keyboard and mouse
-	* phase 9f: peripheral drivers (GPIO, I2C, ...)
-	* phase 9g: clen up (format files, resolve TODOs, clean out test code, ...)
-	* phase 9h: what ever is left
+	* phase 9f: sound output (hdmi)
+	* phase 9g: peripheral drivers (GPIO, I2C, ...)
+	* phase 9h: clen up (format files, resolve TODOs, clean out test code, ...)
+	* phase 9i: what ever is left
 * phase 10: ~~more compiler work to get the whole system to compile - may need to to this sonner~~
 * phase 11: optimizations and additional work - e.g. interrupt driven DMA storage driver
 
