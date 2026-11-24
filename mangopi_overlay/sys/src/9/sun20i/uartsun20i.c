@@ -26,6 +26,9 @@ enum {
 enum {
 	LSR_DR = 1<<0,      /* LSR: data ready */
 	LSR_THRE = 1<<5,    /* LSR: transmit holding empty */
+	LSR_TEMT = 1<<6,	/* transmitter empty: shifter idle too */
+
+	USR	     = 0x7c/4,	/* DW UART status; reading clears busy-detect */
 
     IER_ERDA = 1<<0,    /* IER: enable received-data-available interrupt */
     LCR_DLAB = 1<<7,	/* divisor latch access */
@@ -54,6 +57,8 @@ static Uart suart[1] = {
 	},
 };
 
+static ulong usrlast;				/* sink: forces the USR read to be emitted */
+
 static void
 suartintr(Ureg*, void *arg)
 {
@@ -62,6 +67,10 @@ suartintr(Ureg*, void *arg)
 
 	uart = arg;
 	c = uart->regs;
+	if((c->r[IIR] & 0xf) == 7){		/* DW busy-detect, cleared by reading USR */
+		usrlast = c->r[USR];
+		return;
+	}
 	while(c->r[LSR] & LSR_DR)
 		uartrecv(uart, c->r[RBR]);
 }
@@ -130,7 +139,7 @@ suartenable(Uart *uart, int ie)
 
 	ct = uart->regs;
 	ilock(ct);
-	while((ct->r[LSR] & LSR_THRE) == 0)
+	while((ct->r[LSR] & LSR_TEMT) == 0)
 		;
 	ct->r[LCR] = 0x03;	/* 8 bits, no parity, 1 stop */
 	ct->r[IIR] = 0x01;	/* FCR: enable FIFOs */
@@ -173,7 +182,7 @@ suartbaud(Uart *uart, int n)
 	if(d == 0)
 		return -1;
 	ct = uart->regs;
-	while((ct->r[LSR] & LSR_THRE) == 0)	/* uartctl has already drained */
+	while((ct->r[LSR] & LSR_TEMT) == 0)	/* uartctl has already drained */
 		;
 	ct->r[LCR] |= LCR_DLAB;
 	ct->r[RBR] = d & 0xff;			    /* DLL overlays RBR while DLAB is set */
